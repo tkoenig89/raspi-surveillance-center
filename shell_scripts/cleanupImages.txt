@@ -1,0 +1,3 @@
+cd /imgs/history
+ls -t | sed -e '1,100d' | xargs -d '\n' rm
+cd ~

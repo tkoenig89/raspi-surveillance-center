@@ -1,0 +1,13 @@
+#sudo raspistill -o /imgs/now.jpg -w 1300 -h 780 -tl 10000 -t 100000
+
+#create a folder for each day
+FOLDER="/imgs/history/$(date +%m%m%y)"
+
+#make folder if it doesn't exist
+if ! test -d $FOLDER ; then sudo mkdir $FOLDER ; fi
+
+#archive old image
+sudo cp /imgs/now.jpg $FOLDER/img$(date +%H%M%S).jpg
+
+#shoot image
+sudo raspistill -o /imgs/now.jpg -w 1300 -h 780

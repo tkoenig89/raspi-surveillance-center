@@ -1,5 +1,10 @@
 {
   "name" : "raspi-surveillance-center",
   "version" : "0.0.1",
-  "author" : "Tobias Koenig <tobiaskoenig1@googlemail.com>"
+  "author" : "Tobias Koenig <tobiaskoenig1@googlemail.com>",
+  "repository" : {"type": "git", "url": "https://github.com/maggifix/raspi-surveillance-center.git"},
+  "dependencies": {
+    "jsonwebtoken": "5.0.x",
+    "ws":"0.7.x"
+  }
 }

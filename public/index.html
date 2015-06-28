@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Cam Viewer</title>
+    <meta charset="utf-8" />
+    <script src="/public/angular.min.js"></script>
+    <script src="/public/constants.js"></script>
+    <script src="/public/main.js"></script>
+    <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body ng-app="camApp" ng-controller="camCtrl">
+
+    <header class="paper">
+        <div class="login-wrapper">
+            <div ng-show="showLogin">
+                <input type="text" ng-model="user" placeholder="Username"/>
+                <input type="password" ng-model="pw" placeholder="Password" />
+                <button ng-click="login()">Login</button>
+            </div>
+            <div ng-hide="showLogin">
+                You are logged in!
+            </div>
+        </div>
+    </header>
+    <nav class="paper">
+        <b>Navigation</b>
+        <ul class="nav-list">
+            <li>Live Stream</li>
+            <li>Admin</li>
+        </ul>
+    </nav>
+    <section class="content" ng-show="!showLogin">
+        Content
+        <button ng-click="updateImage()">RefreshImage</button><input type="checkbox" ng-model="repeatRequest" />Repeat image update
+        <br/>
+        <img height="500px" src="{{camImgSrc}}" />
+    </section>
+</body>
+</html>

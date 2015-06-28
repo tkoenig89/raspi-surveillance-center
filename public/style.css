@@ -1,0 +1,38 @@
+body {
+    margin: 0;
+}
+
+header {
+    position: relative;
+    padding: 4px;
+    background-color: #000;
+    color: white;
+    height: 20px;
+}
+
+.login-wrapper {
+    float: right;
+    line-height: 20px;
+}
+
+nav {
+    background-color: #fff;
+    float: left;
+    width: 200px;
+    padding:5px;
+}
+
+.nav-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.content {
+    margin-left: 210px;
+    padding: 10px;
+}
+
+.paper {
+    box-shadow: 0 0 5px 2px rgba(0,0,0,0.25);
+}

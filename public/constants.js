@@ -1,5 +1,5 @@
 var CONST = {
-    SERVICE_URL: "your.url:port",
+    SERVICE_URL: "localhost:8080",
     TOKEN_HEADER: "security-token",
     TOKEN_TIMEOUT: 60,   //minutes
     TOKEN_ALGORITHM: "HS512",
@@ -24,6 +24,21 @@ var CONST = {
         BROWSER_CLIENT: 0,
         CAM_CLIENT: 1,
         APP_CLIENT: 2
+    },
+
+    MIME_TYPES: {
+        js: "application/javascript",
+        html: "text/html",
+        css: "text/css",
+        extractMimeType: function (path) {
+            if (path) {
+                var fExt = path.match(/\.\w+$/);
+                if (fExt.length == 1) {
+                    return this[fExt[0].substr(1)];
+                }
+            }
+            return null;
+        }
     }
 };
 

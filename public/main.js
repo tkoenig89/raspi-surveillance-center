@@ -65,7 +65,7 @@ function Token(dataToStore) {
 
 function openWebSocket() {
     // var ws = new WebSocket("wss://localhost:8080");
-	var ws = new WebSocket("wss://" + CONST.SERVICE_URL);
+	var ws = new WebSocket("ws://" + CONST.SERVICE_URL);
     var imgCallback = null;
 
     ws.onmessage = function (event) {

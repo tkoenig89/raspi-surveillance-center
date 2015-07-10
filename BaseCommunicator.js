@@ -82,16 +82,29 @@ Basesocket.prototype = {
         var self = this;
         var ws = this.ws;
         ws.on('message', function(message) {
+            //messages will be parsed by the receive method and will forward events based on the received state
             self.receive(message);
         });
 
         ws.on("open",function(){
             self._handleEvent("connected");
         });
-        
+
         ws.on("connection",function(ws_client){
             self._handleEvent("connected",ws_client);
-        })
+        });
+
+        ws.on("pong",function(){
+            self._handleEvent("pong");
+        });
+        
+        ws.on("error",function(error){
+            self._handleEvent("error",error);
+        });
+
+        ws.on("close",function(){
+            self._handleEvent("close");
+        });
     } 
 };
 
@@ -113,9 +126,9 @@ function Server(config){
     this.clients = [];
     this.httpServer = null;
     this.ws = null;
-    
+
     var self = this;
-    
+
     //ssl server to handle basic http(s) requests
     if(config.ssloptions){
         console.log("creating https server...");
@@ -130,23 +143,35 @@ function Server(config){
     //wrap ssl server into websocket server
     this.ws = new webSockets.Server({ server: this.httpServer});  
     this._setupWebSocketEvents();
-        
+
     //forward http requests
     function _onHttp(req,res){
-        console.log("http incoming");
         var path = url.parse(req.url).pathname;
+        console.log("HTTP",req.method, path);
+        
         //emit http event
         self._handleEvent("http",req,res,path);
     }
 }
 Server.prototype = new Basesocket();
+
+/*
+* adds the newly connected client to the list of clients connected to the server
+*/ 
 Server.prototype.addClient = function addClient(ws_client){
     console.log("adding new client");
     var clientConnection = new Connection(ws_client);
     this.clients.push(clientConnection);
     return clientConnection;
-}
+};
 
+Server.prototype.removeClient = function removeClient(clientConnection){
+    console.log("removing client");
+    var idx = this.clients.indexOf(clientConnection);
+    if(idx>=0){
+        this.clients.splice(idx,1);
+    }
+};
 /** 
 * Description 
 * @param {string} str textvalue to parse to json 

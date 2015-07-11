@@ -1,44 +1,46 @@
-var com = require("./BaseCommunicator.js");
-var CONSTANTS = require("./public/constants.js");
-var ServerSecurity = require("./Security.js");
-var fs = require('fs');
-var t = com.server(8080);
+var Server = require("./modules/Server"),
+    CONSTANTS = require("./public/constants"),
+    ServerSecurity = require("./Security.js"),
+    fs = require('fs');
 
-t.on("http",function(server,req,res,path){
-    handleHttp(req,res,path);
+var server = new Server({
+    port: 8080
 });
 
-t.on("connected",function(server,ws){
-    console.log("client connected");
-    var client = t.addClient(ws);
-    
-    client.on("tmsg",function(server,data){
-        console.log("msg",data);    
-    }); 
-    
-    client.on("close",function(){
-        //todo: remove event listers!
-        t.removeClient(client);
+server.on("http", function (serv, req, res, path) {
+    handleHttp(req, res, path);
+});
+
+server.on("connected", function (serv, ws) {
+    console.log("client connected", serv.ID, serv.TYPE);
+    var client = server.addClient(ws);
+
+    client.on("tmsg", function (client, data) {
+        console.log(client.id, "msg", data);
     });
-    
-    client.send(null,"tmsg");
+
+    client.on("close", function () {
+        //todo: remove event listers!
+        server.removeClient(client);
+        client = null;
+    });
+
+    client.send(null, "tmsg");
 });
 
 //responds to different http requests
 function handleHttp(req, res, path) {
-        try {
+    try {
         if (path == "/") {
             //index.html
             provideFile(req, res, '/public/index.html');
-        }
-        else if (path.indexOf("/public/") == 0) {
+        } else if (path.indexOf("/public/") == 0) {
             //html/css/js from public folder
             provideFile(req, res, path);
         } else if (path == "/login" && req.method == 'POST') {
             //login
             ServerSecurity.Login(req, res);
-        }
-        else if (path == "/validateToken" && req.method == 'POST') {
+        } else if (path == "/validateToken" && req.method == 'POST') {
             //Token validation
             var valid = ServerSecurity.validateToken(req, res);
             if (valid) {
@@ -87,7 +89,9 @@ function provideFile(req, res, path) {
             res.writeHead(500);
             return res.end("Error: unable to load '" + path) + "'";
         }
-        res.writeHead(200, { 'Content-Type': CONSTANTS.MIME_TYPES.extractMimeType(path) });
+        res.writeHead(200, {
+            'Content-Type': CONSTANTS.MIME_TYPES.extractMimeType(path)
+        });
         res.end(data);
     });
 }

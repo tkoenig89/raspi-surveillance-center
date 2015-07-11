@@ -17,6 +17,8 @@ server.on("connected", function (serv, ws) {
     Logger.log("client connected", serv.ID, serv.TYPE);
     var client = server.addClient(ws);
 
+    setupClientEventHandlers(client, server);
+
     client.sendEventOnly(STATES.SETUP_REQ);
 });
 
@@ -39,7 +41,7 @@ function setupClientEventHandlers(client, server) {
     config[STATES.BINARY_CLOSE] = handleBinaryClose;
     */
 
-    client.on(STATES.SETUP, handleSetup);        
+    client.on(STATES.SETUP, handleSetup);
     client.on(STATES.CLOSE, handleClose);
 
     function handleClose() {

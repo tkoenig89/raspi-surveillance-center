@@ -5,9 +5,9 @@ var CONST = {
     TOKEN_ALGORITHM: "HS512",
 
     STATES: {
-        SETUP: -1,
-        SETUP_REQ: 1,
-        SETUP_DONE: 2,
+        SETUP: 1,
+        SETUP_REQ: 2,
+        SETUP_DONE: 3,
         IDLE: 10,
         IMG_REQ: 20,
         IMG_REQ_FINAL: 21,

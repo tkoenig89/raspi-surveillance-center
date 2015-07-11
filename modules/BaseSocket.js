@@ -76,14 +76,14 @@ Basesocket.prototype = {
         }
     },
     /*
-    * This will send only state information to the other party
-    */
-    sendEventOnly: function sendEventOnly(eventName){
-        this.send(null,eventName);
+     * This will send only state information to the other party
+     */
+    sendEventOnly: function sendEventOnly(eventName) {
+        this.send(null, eventName);
     },
-    ping: function ping(){
-        if(this.ws){
-            ws.ping();
+    ping: function ping() {
+        if (this.ws) {
+            this.ws.ping();
         }
     },
     /*

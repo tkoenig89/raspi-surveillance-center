@@ -5,12 +5,11 @@ var wSocket = require("ws"),
  * @constructor
  */
 function ClientConnection(config) {
-    this.TYPE = config.TYPE || "ClientConnection";
-    
-    if(config.ID){
-        this.ID = config.ID;
-    }
-    
+    //overwrite base attributes
+    this.eventListeners = {};
+    this.TYPE = "ClientConnection";
+    this.ID = config.ID || -1;
+
     //set websocket either from config or create a new from url
     if (config.ws) {
         this.ws = config.ws;
@@ -23,9 +22,9 @@ function ClientConnection(config) {
             this.ws = new wSocket('ws://' + config.url);
         }
     }
-    
+
     //if websocket is set, register the eventhandlers
-    if(this.ws){        
+    if (this.ws) {
         this._setupWebSocketEvents();
     }
 }

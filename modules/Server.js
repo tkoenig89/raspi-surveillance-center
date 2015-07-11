@@ -7,11 +7,14 @@ var fs = require("fs"),
     Client = require("./Client");
 
 function Server(config) {
+    //overwrite base attributes
+    this.eventListeners = {};
+    this.TYPE = "Server";
+    this.ID = this.idTracker();
+    
     this.clients = [];
     this.httpServer = null;
     this.ws = null;
-    this.TYPE = "Server";
-    this.ID = this.idTracker();
     var self = this;
 
     //load ssl certificate from file

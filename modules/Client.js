@@ -8,7 +8,7 @@ function ClientConnection(config) {
     //overwrite base attributes
     this.eventListeners = {};
     this.TYPE = "ClientConnection";
-    this.ID = config.ID || -1;
+    this.ID = config.ID || 0;
 
     //set websocket either from config or create a new from url
     if (config.ws) {

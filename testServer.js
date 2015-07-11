@@ -1,5 +1,7 @@
 var Server = require("./modules/Server"),
     CONSTANTS = require("./public/constants"),
+    Logger = require("./modules/Logger"),
+    STATES = CONSTANTS.STATES,
     ServerSecurity = require("./Security.js"),
     fs = require('fs');
 
@@ -12,21 +14,50 @@ server.on("http", function (serv, req, res, path) {
 });
 
 server.on("connected", function (serv, ws) {
-    console.log("client connected", serv.ID, serv.TYPE);
+    Logger.log("client connected", serv.ID, serv.TYPE);
     var client = server.addClient(ws);
 
-    client.on("tmsg", function (client, data) {
-        console.log(client.id, "msg", data);
-    });
+    client.sendEventOnly(STATES.SETUP_REQ);
+});
 
-    client.on("close", function () {
+function setupClientEventHandlers(client, server) {
+    //Handle connection setup
+    /*config[STATES.SETUP] = function (msgObj, connection) {
+        //update connection information
+        connection.details.type = msgObj.type;
+        Logger.log("Setup done:")
+        connection.log(true);
+
+        //send setup completion notice
+        connection.sendState(STATES.SETUP_DONE);
+    };
+
+    //Client is asking for cam image
+    config[STATES.IMG_REQ] = handleImgRequest;
+    config[STATES.BINARY_START_REQ] = handleBinaryStart;
+    config[STATES.BINARY] = handleBinaryData;
+    config[STATES.BINARY_CLOSE] = handleBinaryClose;
+    */
+
+    client.on(STATES.SETUP, handleSetup);        
+    client.on(STATES.CLOSE, handleClose);
+
+    function handleClose() {
         //todo: remove event listers!
         server.removeClient(client);
         client = null;
-    });
+    }
 
-    client.send(null, "tmsg");
-});
+    function handleSetup(client, data) {
+        //update connection information
+        client.TYPE = data.type;
+
+        //send setup completion notice
+        client.sendEventOnly(STATES.SETUP_DONE);
+
+        Logger.log("Setup", client.ID, client.TYPE);
+    }
+}
 
 //responds to different http requests
 function handleHttp(req, res, path) {
@@ -52,7 +83,7 @@ function handleHttp(req, res, path) {
             }
         } else if (path.indexOf("/private/") == 0) {
             //accessing the private area
-            console.log(path);
+            Logger.log(path);
             var validToken = ServerSecurity.testToken(req);
             if (validToken) {
                 //access granted

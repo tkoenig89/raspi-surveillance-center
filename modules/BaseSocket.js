@@ -1,4 +1,7 @@
-var CONST = require("../public/constants");
+var CONST = require("../public/constants"),
+    STATES = CONST.STATES,
+    Logger = require("./Logger");
+
 /** 
  * @constructor
  */
@@ -39,7 +42,7 @@ Basesocket.prototype = {
      * forwards the received payload and this connection wrapper based on the event
      */
     _handleEvent: function handleEvent(event, param) {
-        console.log(event, this.ID, this.TYPE);
+        Logger.log(event, this.ID, this.TYPE);
 
         var callbacks;
         var _event = event;
@@ -73,10 +76,20 @@ Basesocket.prototype = {
         }
     },
     /*
+    * This will send only state information to the other party
+    */
+    sendEventOnly: function sendEventOnly(eventName){
+        this.send(null,eventName);
+    },
+    ping: function ping(){
+        if(this.ws){
+            ws.ping();
+        }
+    },
+    /*
      * setup the basic websocket events to forward them
      */
     _setupWebSocketEvents: function _setupWebSocketEvents() {
-        console.log("eventListener setup", this.ID, this.TYPE);
         var self = this;
         var ws = this.ws;
 
@@ -86,23 +99,23 @@ Basesocket.prototype = {
         });
 
         ws.on("open", function () {
-            self._handleEvent("connected");
+            self._handleEvent(STATES.CONNECTION_OPENED);
         });
 
         ws.on("connection", function (ws_client) {
-            self._handleEvent("connected", ws_client);
+            self._handleEvent(STATES.CONNECTION_OPENED, ws_client);
         });
 
         ws.on("pong", function () {
-            self._handleEvent("pong");
+            self._handleEvent(STATES.PONG);
         });
 
         ws.on("error", function (error) {
-            self._handleEvent("error", error);
+            self._handleEvent(STATES.ERROR, error);
         });
 
         ws.on("close", function () {
-            self._handleEvent("close");
+            self._handleEvent(STATES.CONNECTION_CLOSED);
         });
     }
 };

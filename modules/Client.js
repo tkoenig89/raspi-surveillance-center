@@ -43,21 +43,14 @@ ClientConnection.prototype.connect = function connect(isReconnect) {
 
         //if successfull, setup eventlisteners
         if (this.ws) {
-            if (isReconnect) {
-                //reset eventListeners for the new connection (with exception for the "open,close,error" events)
-                var open = this.eventListeners[STATES.CONNECTION_OPENED];
-                var close = this.eventListeners[STATES.CONNECTION_CLOSED];
-                var error = this.eventListeners[STATES.ERROR];
-                this.eventListeners = {};
-                this.eventListeners[STATES.CONNECTION_OPENED] = open;
-                this.eventListeners[STATES.CONNECTION_CLOSED] = close;
-                this.eventListeners[STATES.ERROR] = error;
-            } else {
+            if (!isReconnect) {
                 this.on(STATES.CONNECTION_OPENED, function (client) {
                     client.connection.attemps = 0;
                     client.connection.retryTime = retryAfterSecs;
                 });
             }
+
+            //map ws events to eventlisterns of the client
             this._setupWebSocketEvents();
         }
     } else {
@@ -96,7 +89,7 @@ ClientConnection.prototype.pingServer = function pingServer() {
 //pings the server every 5 minutes to keep connection open
 function _pingServer(client) {
     if (client.sendPing) {
-        setTimeout(doThePing, 3000); //=> 5 min 360000
+        setTimeout(doThePing, 360000); //=> 5 min 360000
     }
 
     function doThePing() {

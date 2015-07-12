@@ -9,11 +9,14 @@ var client = new Client({
 });
 
 client.on(STATES.CONNECTION_OPENED, function () {
-    client.on(STATES.SETUP_REQ, handleSetupRequest);
-    client.on(STATES.SETUP_DONE, handleSetupDone);
-    client.on(STATES.PONG, handlePong);
+
 });
 
+//register these events in general. not for each connection!
+//client will internally map the events for each new connection it needs to open
+client.on(STATES.SETUP_REQ, handleSetupRequest);
+client.on(STATES.SETUP_DONE, handleSetupDone);
+client.on(STATES.PONG, handlePong);
 client.on(STATES.ERROR, handleError);
 client.on(STATES.CONNECTION_CLOSED, handleClose);
 

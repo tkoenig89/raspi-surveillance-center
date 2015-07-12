@@ -1,7 +1,7 @@
 var CONST = {
     SERVICE_URL: "localhost:8080",
     TOKEN_HEADER: "security-token",
-    TOKEN_TIMEOUT: 60,   //minutes
+    TOKEN_TIMEOUT: 60, //minutes
     TOKEN_ALGORITHM: "HS512",
 
     STATES: {
@@ -11,22 +11,25 @@ var CONST = {
         IDLE: 10,
         IMG_REQ: 20,
         IMG_REQ_FINAL: 21,
-        IMG_REQ_REJECT:22,
+        IMG_REQ_REJECT: 22,
         BINARY: 40,
         BINARY_START_REQ: 41,
         BINARY_START_ACK: 42,
         BINARY_CLOSE: 43,
-        NEW_IMAGE:50,
+        NEW_IMAGE: 50,
         DEFAULT: 100,
-        CONNECTION_CLOSED:"close",
-        CONNECTION_OPENED:"connected",
-        ERROR:"error",
-        PONG:"pong"
+        CONNECTION_CLOSED: "close",
+        CONNECTION_OPENED: "connected",
+        ERROR: "error",
+        PONG: "pong"
     },
     TYPES: {
         BROWSER_CLIENT: 0,
+        0: "BROWSER_CLIENT",
         CAM_CLIENT: 1,
-        APP_CLIENT: 2
+        1: "CAM_CLIENT",
+        APP_CLIENT: 2,
+        2: "APP_CLIENT"
     },
 
     MIME_TYPES: {

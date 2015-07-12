@@ -1,8 +1,9 @@
 var Server = require("./modules/Server"),
     CONSTANTS = require("./public/constants"),
+    ClientStub = require("./modules/ClientStub"),
     Logger = require("./modules/Logger"),
     STATES = CONSTANTS.STATES,
-    ServerSecurity = require("./Security.js"),
+    ServerSecurity = require("./modules/Security.js"),
     fs = require('fs');
 
 var server = new Server({
@@ -14,52 +15,14 @@ server.on("http", function (serv, req, res, path) {
 });
 
 server.on("connected", function (serv, ws) {
-    Logger.log("client connected", serv.ID, serv.TYPE);
-    var client = server.addClient(ws);
-
-    setupClientEventHandlers(client, server);
-
-    client.sendEventOnly(STATES.SETUP_REQ);
+    //add a newly connected client to the clientList and send setup request
+    var clientStub = new ClientStub({
+        ws: ws,
+        ID: server.idTracker(),
+        server: server
+    });
+    server.clients.push(clientStub);
 });
-
-function setupClientEventHandlers(client, server) {
-    //Handle connection setup
-    /*config[STATES.SETUP] = function (msgObj, connection) {
-        //update connection information
-        connection.details.type = msgObj.type;
-        Logger.log("Setup done:")
-        connection.log(true);
-
-        //send setup completion notice
-        connection.sendState(STATES.SETUP_DONE);
-    };
-
-    //Client is asking for cam image
-    config[STATES.IMG_REQ] = handleImgRequest;
-    config[STATES.BINARY_START_REQ] = handleBinaryStart;
-    config[STATES.BINARY] = handleBinaryData;
-    config[STATES.BINARY_CLOSE] = handleBinaryClose;
-    */
-
-    client.on(STATES.SETUP, handleSetup);
-    client.on(STATES.CLOSE, handleClose);
-
-    function handleClose() {
-        //todo: remove event listers!
-        server.removeClient(client);
-        client = null;
-    }
-
-    function handleSetup(client, data) {
-        //update connection information
-        client.TYPE = data.type;
-
-        //send setup completion notice
-        client.sendEventOnly(STATES.SETUP_DONE);
-
-        Logger.log("Setup", client.ID, client.TYPE);
-    }
-}
 
 //responds to different http requests
 function handleHttp(req, res, path) {

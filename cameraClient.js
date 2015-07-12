@@ -15,6 +15,7 @@ client.on(STATES.CONNECTION_OPENED, function () {
 client.on(STATES.SETUP_REQ, handleSetupRequest);
 client.on(STATES.SETUP_DONE, handleSetupDone);
 client.on(STATES.ERROR, handleError);
+client.on(STATES.CONNECTION_CLOSED, handleClose);
 client.on(STATES.PONG, handlePong);
 
 function handleSetupRequest(client) {
@@ -29,8 +30,25 @@ function handleSetupDone(client) {
     pingServer(client);
 }
 
+function handleClose(client) {
+    reconectWithTimeout(client);
+}
+
 function handleError(client, error) {
-    Logger.error(error);
+    Logger.err(error);
+
+    //try to reconnect
+    reconectWithTimeout(client);
+
+}
+
+function reconectWithTimeout(client) {
+    ws = null;
+    sendPing = false;
+    console.log("reconnecting in 15 seconds...");
+    setTimeout(function () {
+        client.connect()
+    }, 15000);
 }
 
 function handlePong() {

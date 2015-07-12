@@ -35,15 +35,14 @@ Basesocket.prototype = {
                 this._handleEvent(CONST.STATES.BINARY, strMsg);
             }
         } else {
-            console.error("String Message: %s", msgObj);
+            console.err("String Message: %s", msgObj);
         }
     },
     /*
      * forwards the received payload and this connection wrapper based on the event
      */
     _handleEvent: function handleEvent(event, param) {
-        Logger.log(event, this.ID, this.TYPE);
-
+        //Logger.log(event, this.ID, this.TYPE);
         var callbacks;
         var _event = event;
 

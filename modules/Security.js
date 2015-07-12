@@ -1,5 +1,5 @@
 var jwt = require("jsonwebtoken"), 
-    CONST = require("./public/constants.js"),
+    CONST = require("../public/constants"),
     secret = "jksaniobkv893nfi982nfalkid983nbf",
     sessionID = Math.floor(Math.random() * 100000);
 

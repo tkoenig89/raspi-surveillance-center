@@ -39,7 +39,7 @@ function Server(config) {
     }
     //listen on the configured port
     this.httpServer.listen(config.port);
-    Logger.log("listening on port %s", config.port);
+    Logger.log("listening on port", config.port);
 
     //wrap ssl server into websocket server
     this.ws = new wSocket.Server({

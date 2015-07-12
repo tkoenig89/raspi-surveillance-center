@@ -9,14 +9,13 @@ var client = new Client({
 });
 
 client.on(STATES.CONNECTION_OPENED, function () {
-
+    client.on(STATES.SETUP_REQ, handleSetupRequest);
+    client.on(STATES.SETUP_DONE, handleSetupDone);
+    client.on(STATES.PONG, handlePong);
 });
 
-client.on(STATES.SETUP_REQ, handleSetupRequest);
-client.on(STATES.SETUP_DONE, handleSetupDone);
 client.on(STATES.ERROR, handleError);
 client.on(STATES.CONNECTION_CLOSED, handleClose);
-client.on(STATES.PONG, handlePong);
 
 function handleSetupRequest(client) {
     client.send({
@@ -26,47 +25,21 @@ function handleSetupRequest(client) {
 
 function handleSetupDone(client) {
     Logger.log("starting to ping server");
-    sendPing = true;
-    pingServer(client);
+    client.pingServer();
 }
 
 function handleClose(client) {
-    reconectWithTimeout(client);
+    client.reconnect();
 }
 
 function handleError(client, error) {
     Logger.err(error);
 
     //try to reconnect
-    reconectWithTimeout(client);
-
+    client.reconnect();
 }
 
-function reconectWithTimeout(client) {
-    ws = null;
-    sendPing = false;
-    console.log("reconnecting in 15 seconds...");
-    setTimeout(function () {
-        client.connect()
-    }, 15000);
-}
-
-function handlePong() {
-    Logger.log("Pong after " + _pingsent + " pings");
-    _pingsent = 0;
-}
-
-//pings the server every 5 minutes to keep connection open
-function pingServer(client) {
-    if (sendPing) {
-        setTimeout(doThePing, 360000); //=> 5 min 360000
-    }
-
-    function doThePing() {
-        client.ping();
-        _pingsent++;
-
-        //start another ping after a while
-        pingServer(client);
-    }
+function handlePong(client) {
+    Logger.log("Pong after " + client._pingsent + " pings");
+    client._pingsent = 0;
 }

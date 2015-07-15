@@ -1,7 +1,8 @@
 var BaseSocket = require("./BaseSocket"),
     CONSTANTS = require("../public/constants"),
     STATES = CONSTANTS.STATES,
-    Logger = require("./Logger");
+    Logger = require("./Logger"),
+    fs = require("fs");
 
 /*
 * Handles all the communication between server and client
@@ -71,25 +72,25 @@ function handleImgRequest(client, data) {
 
 //prepare for receiving binary image data
 function handleBinaryStart(client, data) {
-    var fStream = connection.details.stream;
+    var fStream = client.binary.stream;
     if (!fStream) {
-        var path = connection.details.imgPath = "/private/" + data.fileName;
-        fStream = connection.details.stream = fs.createWriteStream(__dirname + path);
+        var path = client.binary.imgPath = "/../private/" + data.fileName;
+        fStream = client.binary.stream = fs.createWriteStream(__dirname + path);
     }
     client.sendEventOnly(STATES.BINARY_START_ACK);
 }
 
 //retrieve image data
 function handleBinaryData(client, data) {
-    var fStream = connection.details.stream;
+    var fStream = client.binary.stream;
     fStream.write(data);
 }
 
 //close the stream
-function handleBinaryClose(data, connection) {
-    var fStream = connection.details.stream;
+function handleBinaryClose(client, data) {
+    var fStream = connection.binary.stream;
     fStream.end();
-    connection.details.stream = null;
+    connection.binary.stream = null;
 
     //send update to all browsers:
     var browsers = ConnectionHandler.getConnectionOfType(CONST.TYPES.BROWSER_CLIENT);

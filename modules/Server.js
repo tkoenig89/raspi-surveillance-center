@@ -85,4 +85,14 @@ Server.prototype.removeClient = function removeClient(clientConnection) {
     }
 };
 
+Server.prototype.getClientsByType = function getClientsByType(type){
+    var found = [];
+    this.clients.forEach(function(cl,i){
+        if(cl.TYPE == type){
+            found.push(cl);
+        }
+    });
+    return found;
+};
+
 module.exports = Server;

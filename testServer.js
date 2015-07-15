@@ -78,6 +78,23 @@ function handleHttp(req, res, path) {
     }
 }
 
+//request a new image from the mobile client
+var lastRequest = -1;
+var requestImageOnlyEachMs = 15000;
+
+function requestUpdatedImage() {
+    var time = (new Date()).getTime();
+    //allow updates only after the defined timeframe
+    if (lastRequest < 0 || lastRequest <= time - requestImageOnlyEachMs) {
+        lastRequest = time;
+        var camClients = server.getClientsByType(CONSTANTS.TYPES.CAM_CLIENT);
+        if (camClients && camClients.length > 0) {
+            Logger.log("Camera found", camClients[0].ID);
+            camClients[0].sendEventOnly(STATES.IMG_REQ);
+        }
+    }
+}
+
 //returns a file from the public folder
 function provideFile(req, res, path) {
     var file = fs.readFile(__dirname + path, function (err, data) {

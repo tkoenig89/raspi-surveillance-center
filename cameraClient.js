@@ -2,7 +2,9 @@ var Client = require("./modules/Client"),
     CONSTANTS = require("./public/constants"),
     Logger = require("./modules/Logger"),
     STATES = CONSTANTS.STATES,
-    TYPES = CONSTANTS.TYPES;
+    TYPES = CONSTANTS.TYPES,
+    fs = require("fs");
+
 var _pingsent = 0;
 var client = new Client({
     url: "localhost:8080"
@@ -16,9 +18,11 @@ client.on(STATES.CONNECTION_OPENED, function () {
 //client will internally map the events for each new connection it needs to open
 client.on(STATES.SETUP_REQ, handleSetupRequest);
 client.on(STATES.SETUP_DONE, handleSetupDone);
+client.on(STATES.IMG_REQ, handleImgRequest);
 client.on(STATES.PONG, handlePong);
 client.on(STATES.ERROR, handleError);
 client.on(STATES.CONNECTION_CLOSED, handleClose);
+client.on(STATES.BINARY_START_ACK, sendImage);
 
 function handleSetupRequest(client) {
     client.send({
@@ -45,4 +49,37 @@ function handleError(client, error) {
 function handlePong(client) {
     Logger.log("Pong after " + client._pingsent + " pings");
     client._pingsent = 0;
+}
+
+function handleImgRequest(client, data) {
+    Logger.log("img request arived");
+    //get the latest image
+    var fileName = getLatestImage(client);
+    //and prepare server for sending if binary data
+    client.send({
+        fileName: fileName
+    }, STATES.BINARY_START_REQ);
+}
+
+function getLatestImage(client) {
+    //remember path to the file and return its name
+    client.binary = {
+        filePath: "/imgs/small.jpg",
+        fileFromDir: false
+    };
+    return client.binary.filePath.match(/\w+\.\w+$/)[0];
+}
+
+function sendImage(client) {
+    var readStream = fs.createReadStream((client.binary.fileFromDir ? __dirname : "") + client.binary.filePath);
+
+    readStream.on('data', function (data) {
+        client.send(data, {
+            binary: true,
+            mask: true
+        });
+    });
+    readStream.on("end", function () {
+        client.sendEventOnly(STATES.BINARY_CLOSE);
+    });
 }

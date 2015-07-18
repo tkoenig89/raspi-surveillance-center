@@ -27,8 +27,8 @@ function ClientConnection(config) {
         this.connect();
     }
 }
-ClientConnection.prototype = new Basesocket();
 
+ClientConnection.prototype = new Basesocket();
 ClientConnection.prototype.connect = function connect(isReconnect) {
     var url = this.connection.url;
     if (url) {
@@ -57,7 +57,6 @@ ClientConnection.prototype.connect = function connect(isReconnect) {
         Logger.err("Opening connection failed", this.connection.url);
     }
 };
-
 ClientConnection.prototype.reconnect = function reconnect() {
     this.ws = null;
     this.sendPing = false;
@@ -100,4 +99,5 @@ function _pingServer(client) {
         _pingServer(client);
     }
 }
+
 module.exports = ClientConnection;

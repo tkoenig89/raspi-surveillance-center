@@ -88,29 +88,29 @@ function handleBinaryData(client, data) {
 
 //close the stream
 function handleBinaryClose(client, data) {
-    var fStream = connection.binary.stream;
-    fStream.end();
-    connection.binary.stream = null;
+    var fStream = client.binary.stream;
+    if(fStream) fStream.end();
+    client.binary.stream = null;
 
     //send update to all browsers:
-    var browsers = ConnectionHandler.getConnectionOfType(CONST.TYPES.BROWSER_CLIENT);
+    var browsers = client.server.getClientsByType(CONSTANTS.TYPES.BROWSER_CLIENT);
     if (browsers.length > 0) {
         for (var i in browsers)
-            browsers[i].sendMessage({
-                imgPath: connection.details.imgPath
-            }, CONST.STATES.NEW_IMAGE);
+            browsers[i].send({
+                imgPath: client.binary.imgPath
+            }, CONSTANTS.STATES.NEW_IMAGE);
     }
 }
 
 //request a new image from the mobile client
 var lastRequest = -1;
-
+var requestImageOnlyEachMs = 15000;
 function requestUpdatedImage() {
     var time = (new Date()).getTime();
     //allow updates only after the defined timeframe
     if (lastRequest < 0 || lastRequest <= time - requestImageOnlyEachMs) {
         lastRequest = time;
-        var mobile = ConnectionHandler.getConnectionOfType(CONST.TYPES.CAM_CLIENT);
+        var mobile = ConnectionHandler.getConnectionOfType(CONSTANTS.TYPES.CAM_CLIENT);
         if (mobile && mobile.length > 0) {
             console.log("Cam client with ID:%s found.", mobile[0].id);
             mobile[0].sendState(STATES.IMG_REQ);

@@ -36,16 +36,16 @@ ClientStub.prototype = new BaseSocket();
 
 ClientStub.prototype.setupCommuncationHandling = function setup() {
     this.on(STATES.SETUP, handleSetup);
-    this.on(STATES.CLOSE, handleClose);
+    this.on(STATES.CONNECTION_CLOSED, handleClose);
     this.on(STATES.IMG_REQ, handleImgRequest);
     this.on(STATES.BINARY_START_REQ, handleBinaryStart);
     this.on(STATES.BINARY, handleBinaryData);
     this.on(STATES.BINARY_CLOSE, handleBinaryClose);
 }
 
-function handleClose() {
+function handleClose(client) {
     //todo: remove event listers!
-    server.removeClient(client);
+    client.server.removeClient(client);
     client = null;
 }
 
@@ -82,6 +82,7 @@ function handleBinaryStart(client, data) {
 
 //retrieve image data
 function handleBinaryData(client, data) {
+  Logger.log("Binary",data);
     var fStream = client.binary.stream;
     fStream.write(data);
 }

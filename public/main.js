@@ -70,15 +70,20 @@ function openWebSocket() {
 
     ws.onmessage = function (event) {
         var data = JSON.parse(event.data);
-        switch (data.state) {
+        switch (data.ev) {
             case CONST.STATES.SETUP_REQ:
-                ws.send(JSON.stringify({ type: CONST.TYPES.BROWSER_CLIENT, state: CONST.STATES.SETUP }));
+                ws.send(JSON.stringify({
+                  pl:{
+                    type: CONST.TYPES.BROWSER_CLIENT
+                  },
+                  ev: CONST.STATES.SETUP
+                }));
                 break;
             case CONST.STATES.SETUP_DONE:
                 break;
             case CONST.STATES.NEW_IMAGE:
                 if (imgCallback) {
-                    imgCallback(data);
+                    imgCallback(data.pl);
                 }
                 break;
         }

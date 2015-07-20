@@ -2,7 +2,7 @@ var CONST = require("../public/constants"),
     STATES = CONST.STATES,
     Logger = require("./Logger");
 
-/** 
+/**
  * @constructor
  */
 function Basesocket() {
@@ -32,7 +32,7 @@ Basesocket.prototype = {
                 this._handleEvent(msgObj.ev, msgObj.pl);
             } else {
                 //binary data
-                this._handleEvent(CONST.STATES.BINARY, strMsg);
+                this._handleEvent(STATES.BINARY, strMsg);
             }
         } else {
             console.err("String Message: %s", msgObj);
@@ -119,7 +119,7 @@ Basesocket.prototype = {
     }
 };
 
-/** 
+/**
  * Description
  * @param {string} str textvalue to parse to json
  */

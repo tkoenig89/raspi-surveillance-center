@@ -1,7 +1,7 @@
 var wSocket = require("ws"),
     CONST = require("../public/constants"),
     STATES = CONST.STATES,
-    Basesocket = require("./Basesocket"),
+    Basesocket = require("./BaseSocket"),
     Logger = require("./Logger");
 
 var retryAfterSecs = 5000;

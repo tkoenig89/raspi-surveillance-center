@@ -3,7 +3,7 @@ var fs = require("fs"),
     https = require("https"),
     url = require('url'),
     wSocket = require("ws"),
-    Basesocket = require("./Basesocket"),
+    Basesocket = require("./BaseSocket"),
     Client = require("./Client"),
     Logger = require("./Logger");
 

@@ -8,7 +8,8 @@ var Client = require("./modules/Client"),
 var cam_client = (function () {
     var _pingsent = 0;
     var client = new Client({
-        url: "localhost:8080"
+        url: CONSTANTS.SERVICE_URL + ":" + CONSTANTS.SERVICE_PORT,
+		secure: CONSTANTS.SECURE_CONNECTION
     });
 
     client.on(STATES.CONNECTION_OPENED, function () {

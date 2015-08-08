@@ -1,5 +1,7 @@
 var CONST = {
-    SERVICE_URL: "localhost:8080",
+    SERVICE_URL: "localhost",
+	SERVICE_PORT: 8080,
+	SECURE_CONNECTION: false,
     TOKEN_HEADER: "security-token",
     TOKEN_TIMEOUT: 60, //minutes
     TOKEN_ALGORITHM: "HS512",

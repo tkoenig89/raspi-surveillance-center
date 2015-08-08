@@ -5,7 +5,8 @@ var CONST = {
     TOKEN_HEADER: "security-token",
     TOKEN_TIMEOUT: 60, //minutes
     TOKEN_ALGORITHM: "HS512",
-
+	LOG_MODE: 1, //0: nothing, 1: error only, 2: everything
+	
     STATES: {
         SETUP: 1,
         SETUP_REQ: 2,

@@ -11,7 +11,9 @@ if ! test -d $HISTORYFOLDER ; then sudo mkdir $HISTORYFOLDER ; fi
 if ! test -d $FOLDER ; then sudo mkdir $FOLDER ; fi
 
 #archive old image
-sudo cp $BASEFOLDER/now.jpg $FOLDER/img$(date +%H%M%S).jpg
+if ! test -d $BASEFOLDER/now.jpg ; 
+	then sudo cp $BASEFOLDER/now.jpg $FOLDER/img$(date +%H%M%S).jpg ;
+fi
 
 #shoot image
 sudo raspistill -o $BASEFOLDER/now.jpg -w 1300 -h 780

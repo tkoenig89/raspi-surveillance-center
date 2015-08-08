@@ -8,8 +8,8 @@ var Server = require("./modules/Server"),
 
 var server = new Server({
     port: CONSTANTS.SERVICE_PORT,
-	keyFile: CONSTANTS.SECURE_CONNECTION && "sslcert/key.pem",
-	certFile: CONSTANTS.SECURE_CONNECTION && "sslcert/cert.pem"
+	keyFile: CONSTANTS.SECURE_CONNECTION && (__dirname + "/sslcert/key.pem"),
+	certFile: CONSTANTS.SECURE_CONNECTION && (__dirname + "/sslcert/cert.pem")
 });
 
 server.on("http", function (serv, req, res, path) {

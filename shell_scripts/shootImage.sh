@@ -3,7 +3,7 @@
 #create a folder for each day
 BASEFOLDER=$1
 HISTORYFOLDER=$2
-FOLDER="$HISTORYFOLDER/$(date +%m%m%y)"
+FOLDER="$HISTORYFOLDER/$(date +%d%m%y)"
 
 #define in which hours of the day there should no image be shot
 NO_IMG_HOURS=";23;24;0;1;2;3;4"

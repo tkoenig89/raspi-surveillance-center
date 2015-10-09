@@ -3,16 +3,54 @@ var jwt = require("jsonwebtoken"),
     secret = "jksaniobkv893nfi982nfalkid983nbf",
     sessionID = Math.floor(Math.random() * 100000);
 
+var Roles = {
+    //define your own random mappings for each role 
+    _values:{
+        28232:"Admin",
+        26340:"View",
+        76007:"Read"
+    },
+    getByID(id){
+        return this._values[id];
+    },
+    getID(name){
+        for(var i in this._values){
+            if(name === this._values[i]){
+                return i;
+            }
+        }
+        return -1;
+    }
+};
+
+function User(name,pw,role){
+    this.Name = name;
+    this.Pw = pw;
+    this.Role = role;
+}
+
 //Handles logins and security token operations
 var ServerSecurity = (function () {
     //all valid logins
-    var LOGINS = {
-        "user": "pw",
-        "test": "pw"
-    };
+    var LOGINS = [
+        new User("user","pw",Roles.getID("Admin")),
+        new User("test","pw",Roles.getID("View"))
+    ];
 
     function setTokenCookie(res,token) {
         res.setHeader('Set-Cookie', CONST.TOKEN_HEADER + '=' + token );
+    }
+
+    function getRoleFromLogin(user,pw){
+        if(user && pw){
+            for(var i in LOGINS){
+                var login = LOGINS[i];
+                if(login.Name === user && login.Pw === pw){
+                    return login.Role;
+                }
+            }
+        }
+        return 0;
     }
 
     //tests if the user is allowed to login
@@ -27,14 +65,13 @@ var ServerSecurity = (function () {
         });
         req.on('end', function () {
             //parse the received data
-            var post = JSON.parse(body);
-            if (post.user && LOGINS[post.user] == post.pw) {
+            var cred = JSON.parse(body);
+            var role = cred && getRoleFromLogin(cred.user,cred.pw)
+            if (role) {
 
-                //create a new security token in case of a valid login
-                var token = createToken(post.user);
-
-                //set cookie value for the token
-                setTokenCookie(res, token);
+                //create a new security token in case of a valid login and set the cookie
+                refreshCookie(role);
+                
                 res.writeHead(200);
                 res.end("Granted");
             } else {
@@ -46,12 +83,18 @@ var ServerSecurity = (function () {
 
     }
 
+    //creates a new token based on the users role and sets the cookie with the new token
+    function refreshCookie(role,resp){
+        var token = createToken(role);
+        setTokenCookie(resp, token);
+    }
+
     //test if the token inside the header is valid
-    function validateToken(req, res) {
+    function refreshToken(req, res) {
         var validToken = testSecurityToken(req);
         if (validToken) {
             //return an updated version of the token
-            var token = createToken(validToken.userName);
+            var token = createToken(validToken.y);
             setTokenCookie(res, token);
             return true;
         } else {
@@ -60,29 +103,27 @@ var ServerSecurity = (function () {
     }
 
     //creates a new security token
-    function createToken(name) {
+    function createToken(role) {
         //token is only valid for one server session
-        var token = jwt.sign({ sessionID: sessionID, userName: name }, secret, { algorithm: CONST.TOKEN_ALGORITHM, expiresInMinutes: CONST.TOKEN_TIMEOUT });
+        var token = jwt.sign({ x: sessionID, y: role }, secret, { algorithm: CONST.TOKEN_ALGORITHM, expiresInMinutes: CONST.TOKEN_TIMEOUT });
         return token;
     }
 
     //tests the header of the request for a valid security token
-    //allows passing in the token directly
     function testSecurityToken(req) {
         var token = null;
         if(typeof(req) === "object"){
             //get token from req
             token = parseCookies(req)[CONST.TOKEN_HEADER];        
-        }else if(typeof(req) === "string"){
-            //token was passed directly
-            token = req;
         }
         if (token) {
             try {
                 var decoded = jwt.verify(token, secret, { algorithm: CONST.TOKEN_ALGORITHM });
-                if (decoded.sessionID == sessionID)
+                if (decoded && decoded.x === sessionID)
                     return decoded;
-            } catch (err) { }
+            } catch (err) {
+                return null;
+            }
         }
         return null;
     }
@@ -97,12 +138,26 @@ var ServerSecurity = (function () {
         });
         return list;
     }
+    
+    /**
+     * Tests if the current user has one of the given roles
+    */
+    function testUserAccess(req,requiredRoles){
+        var token = testSecurityToken(req);
+        //test if the current user has one off the required roles
+        if(token && requiredRoles.indexOf(Roles.getByID(token.y)) >= 0 ){
+            return true;
+        }else{
+            return false;
+        }
+    }
 
     return {
         Login: login,
         createToken: createToken,
         testToken: testSecurityToken,
-        validateToken: validateToken
+        refreshToken:refreshToken,
+        testUserAccess: testUserAccess
     }
 })();
 

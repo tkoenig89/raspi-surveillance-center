@@ -28,7 +28,6 @@ function ClientStub(config) {
         this.sendEventOnly(STATES.SETUP_REQ);
     } catch (exception) {
         Logger.err("ClientStub creation:", exception.message);
-        return null;
     }
 }
 

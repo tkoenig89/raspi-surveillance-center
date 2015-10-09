@@ -28,6 +28,7 @@ server.on("connected", function (serv, ws) {
 
 //responds to different http requests
 function handleHttp(req, res, path) {
+    var hasAccess = false;
     try {
         if (path == "/") {
             //index.html
@@ -40,8 +41,8 @@ function handleHttp(req, res, path) {
             ServerSecurity.Login(req, res);
         } else if (path == "/validateToken" && req.method == 'POST') {
             //Token validation
-            var valid = ServerSecurity.validateToken(req, res);
-            if (valid) {
+            hasAccess = ServerSecurity.refreshToken(req, res);
+            if (hasAccess) {
                 res.writeHead(200);
                 res.end("Valid");
             } else {
@@ -51,8 +52,8 @@ function handleHttp(req, res, path) {
         } else if (path.indexOf("/private/") == 0) {
             //accessing the private area
             Logger.log(path);
-            var validToken = ServerSecurity.testToken(req);
-            if (validToken) {
+            hasAccess = ServerSecurity.testUserAccess(req,"Admin,Read,View");
+            if (hasAccess) {
                 //access granted
                 provideFile(req, res, path);
             } else {
@@ -61,8 +62,8 @@ function handleHttp(req, res, path) {
                 res.end("Denied");
             }
         } else if (path == "/refreshimage" && req.method == "POST") {
-            var validToken = ServerSecurity.testToken(req);
-            if (validToken) {
+            hasAccess = ServerSecurity.testUserAccess(req,"Admin,Read,View");
+            if (hasAccess) {
                 //access granted
                 requestUpdatedImage();
 

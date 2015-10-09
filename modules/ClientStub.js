@@ -1,6 +1,5 @@
 var BaseSocket = require("./BaseSocket"),
     CONSTANTS = require("../public/constants"),
-    ServerSecurity = require("./modules/Security.js"),
     STATES = CONSTANTS.STATES,
     Logger = require("./Logger"),
     fs = require("fs");
@@ -37,7 +36,6 @@ ClientStub.prototype = new BaseSocket();
 ClientStub.prototype.setupCommuncationHandling = function setup() {
     this.on(STATES.SETUP, handleSetup);
     this.on(STATES.CONNECTION_CLOSED, handleClose);
-    this.on(STATES.IMG_REQ, handleImgRequest);
     this.on(STATES.BINARY_START_REQ, handleBinaryStart);
     this.on(STATES.BINARY, handleBinaryData);
     this.on(STATES.BINARY_CLOSE, handleBinaryClose);
@@ -57,17 +55,6 @@ function handleSetup(client, data) {
     client.sendEventOnly(STATES.SETUP_DONE);
 
     Logger.log("Setup done!", client.ID, CONSTANTS.TYPES[client.TYPE]);
-}
-
-function handleImgRequest(client, data) {
-    console.log("Image Request:");
-    //validate the token
-    if (data.token && ServerSecurity.testToken(data.token)) {
-        requestUpdatedImage();
-    } else {
-        //reject the request
-        client.sendEventOnly(STATES.IMG_REQ_REJECT);
-    }
 }
 
 //prepare for receiving binary image data
@@ -100,22 +87,6 @@ function handleBinaryClose(client, data) {
             browsers[i].send({
                 imgPath: client.binary.imgPath
             }, CONSTANTS.STATES.NEW_IMAGE);
-    }
-}
-
-//request a new image from the mobile client
-var lastRequest = -1;
-var requestImageOnlyEachMs = 15000;
-function requestUpdatedImage() {
-    var time = (new Date()).getTime();
-    //allow updates only after the defined timeframe
-    if (lastRequest < 0 || lastRequest <= time - requestImageOnlyEachMs) {
-        lastRequest = time;
-        var mobile = ConnectionHandler.getConnectionOfType(CONSTANTS.TYPES.CAM_CLIENT);
-        if (mobile && mobile.length > 0) {
-            console.log("Cam client with ID:%s found.", mobile[0].id);
-            mobile[0].sendState(STATES.IMG_REQ);
-        }
     }
 }
 

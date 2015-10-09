@@ -70,7 +70,7 @@ var ServerSecurity = (function () {
             if (role) {
 
                 //create a new security token in case of a valid login and set the cookie
-                refreshCookie(role);
+                refreshCookie(role,res);
                 
                 res.writeHead(200);
                 res.end("Granted");
@@ -94,8 +94,7 @@ var ServerSecurity = (function () {
         var validToken = testSecurityToken(req);
         if (validToken) {
             //return an updated version of the token
-            var token = createToken(validToken.y);
-            setTokenCookie(res, token);
+            refreshCookie(validToken.y,res);
             return true;
         } else {
             return false;

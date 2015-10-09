@@ -21,7 +21,6 @@ var cam_client = (function () {
     client.on(STATES.SETUP_REQ, handleSetupRequest);
     client.on(STATES.SETUP_DONE, handleSetupDone);
     client.on(STATES.IMG_REQ, handleImgRequest);
-    client.on(STATES.PONG, handlePong);
     client.on(STATES.ERROR, handleError);
     client.on(STATES.CONNECTION_CLOSED, handleClose);
     client.on(STATES.BINARY_START_ACK, sendImage);
@@ -33,8 +32,7 @@ var cam_client = (function () {
     }
 
     function handleSetupDone(client) {
-        Logger.log("starting to ping server");
-        client.pingServer();
+        Logger.log("Connection established");
     }
 
     function handleClose(client) {
@@ -46,11 +44,6 @@ var cam_client = (function () {
 
         //try to reconnect
         client.reconnect();
-    }
-
-    function handlePong(client) {
-        Logger.log("Pong after " + client._pingsent + " pings");
-        client._pingsent = 0;
     }
 
     function handleImgRequest(client, data) {

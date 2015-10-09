@@ -4,8 +4,6 @@ var wSocket = require("ws"),
     Basesocket = require("./BaseSocket"),
     Logger = require("./Logger");
 
-var retryAfterSecs = 5000;
-
 /*
  * Wrapper for Web Socket connections
  * @constructor
@@ -21,7 +19,8 @@ function ClientConnection(config) {
             url: config.url,
             secure: config.secure,
             attemps: 0,
-            retryTime: retryAfterSecs
+            retryTime: 5000,
+            retryMax: 60000
         };
 
         this.connect();
@@ -46,10 +45,16 @@ ClientConnection.prototype.connect = function connect(isReconnect) {
             if (!isReconnect) {
                 this.on(STATES.CONNECTION_OPENED, function (client) {
                     client.connection.attemps = 0;
-                    client.connection.retryTime = retryAfterSecs;
                 });
-            }
+                
+                this.on(STATES.PONG, function (server) {
+                    //reset pingcount after successful pong
+                    this._pingsent = 0;
+                });
 
+            }
+            handlePingPong();
+            
             //map ws events to eventlisterns of the client
             this._setupWebSocketEvents();
         }
@@ -62,7 +67,7 @@ ClientConnection.prototype.reconnect = function reconnect() {
     this.sendPing = false;
 
     //double the waiting time if there has been no answer twice
-    if (this.connection.attemps >= 2) {
+    if (this.connection.attemps >= 2 && this.connection.retryTime <= this.connection.retryMax) {
         this.connection.retryTime *= 2;
         this.connection.attemps = 1;
     } else {
@@ -75,28 +80,32 @@ ClientConnection.prototype.reconnect = function reconnect() {
         self.connect(true);
     }, this.connection.retryTime);
 };
-
-/*
- * Starts pinging the server regular
+/**
+ * handles ping pong between client and the server. Starts reconnect after 2 failed pings
  */
-ClientConnection.prototype.pingServer = function pingServer() {
-    this.sendPing = true;
-    this._pingsent = 0;
-    _pingServer(this);
-};
+function handlePingPong(client) {
+    var pingTimeout = CONST.TIME_BETWEEN_PINGS * 1000;
+    client.sendPing = true;
+    client._pingsent = 0;
+    
+    function _pingServer() {
+        if (client.sendPing) {
+            if (client._pingsent < 3) {
+                setTimeout(doThePing, pingTimeout);
+            } else {
+                // connection seems to be lost
+                client.reconnect();
+            }
 
-//pings the server every 5 minutes to keep connection open
-function _pingServer(client) {
-    if (client.sendPing) {
-        setTimeout(doThePing, 360000); //=> 5 min 360000
-    }
+        }
 
-    function doThePing() {
-        client.ping();
-        client._pingsent++;
+        function doThePing() {
+            client.ping();
+            client._pingsent++;
 
-        //start another ping after a while
-        _pingServer(client);
+            //start another ping after a while
+            _pingServer(client);
+        }
     }
 }
 

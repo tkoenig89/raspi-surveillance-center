@@ -1,5 +1,6 @@
 var BaseSocket = require("./BaseSocket"),
     CONSTANTS = require("../public/constants"),
+    ServerSecurity = require("./modules/Security.js"),
     STATES = CONSTANTS.STATES,
     Logger = require("./Logger"),
     fs = require("fs");

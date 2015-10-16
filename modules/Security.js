@@ -10,10 +10,10 @@ var Roles = {
         26340:"View",
         76007:"Read"
     },
-    getByID(id){
+    getByID: function getByID(id){
         return this._values[id];
     },
-    getID(name){
+    getID: function getID(name){
         for(var i in this._values){
             if(name === this._values[i]){
                 return i;

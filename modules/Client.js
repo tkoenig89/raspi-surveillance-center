@@ -89,6 +89,9 @@ function handlePingPong(client) {
     client.sendPing = true;
     client._pingsent = 0;
     
+    //start pinging
+    _pingServer();
+    
     function _pingServer() {
         if (client.sendPing) {
             if (client._pingsent < 3) {

@@ -82,7 +82,11 @@ Basesocket.prototype = {
     },
     ping: function ping() {
         if (this.ws) {
-            this.ws.ping();
+            try{
+                this.ws.ping();
+            }catch(ex){
+                Logger.err("Exception on ping:",ex.message);
+            }
         }
     },
     /*

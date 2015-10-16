@@ -43,16 +43,17 @@ ClientConnection.prototype.connect = function connect(isReconnect) {
         //if successfull, setup eventlisteners
         if (this.ws) {
             if (!isReconnect) {
+                var self = this;
                 this.on(STATES.CONNECTION_OPENED, function (client) {
                     //reset reconnect values on successful connect
+                    client._pingsent = 0;
                     client.connection.attemps = 0;
                     client.connection.retryTime = 5000;
                 });
-                
                 this.on(STATES.PONG, function (server) {
                     //reset pingcount after successful pong
                     Logger.log("pong");
-                    this._pingsent = 0;
+                    self._pingsent = 0;
                 });
 
             }
@@ -87,6 +88,7 @@ ClientConnection.prototype.reconnect = function reconnect() {
  * handles ping pong between client and the server. Starts reconnect after 2 failed pings
  */
 function handlePingPong(client) {
+    Logger.log("Setup ping-pong");
     var pingTimeout = CONST.TIME_BETWEEN_PINGS * 1000;
     client.sendPing = true;
     client._pingsent = 0;
@@ -100,18 +102,21 @@ function handlePingPong(client) {
                 setTimeout(doThePing, pingTimeout);
             } else {
                 // connection seems to be lost
+                Logger.log(client.sendPing,client._pingsent);
                 client.reconnect();
             }
 
         }
 
         function doThePing() {
-            client.ping();
-            client._pingsent++;
-            
-            Logger.log("ping");
-            //start another ping after a while
-            _pingServer(client);
+            if(client.sendPing){
+                client.ping();
+                client._pingsent++;
+
+                Logger.log("ping");
+                //start another ping after a while
+                _pingServer(client);
+            }
         }
     }
 }

@@ -56,7 +56,7 @@ function handleSetup(client, data) {
     Logger.log("Old ID:",data.ID);
     if(oldConnection){
         Logger.log("Closing old connection");
-        client.ws.close();
+        oldConnection.ws.close();
         handleClose(client);
     }
     

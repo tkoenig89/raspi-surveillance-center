@@ -50,9 +50,18 @@ function handleClose(client) {
 function handleSetup(client, data) {
     //update connection information
     client.TYPE = data.type;
-
+    
+    //try to find a open connection to this client and close the old connection
+    var oldConnection = client.server.findClientById(data.ID);
+    Logger.log("Old ID:",data.ID);
+    if(oldConnection){
+        Logger.log("Closing old connection");
+        handleClose(client);
+    }
+    
     //send setup completion notice
-    client.sendEventOnly(STATES.SETUP_DONE);
+    //client.sendEventOnly(STATES.SETUP_DONE);
+    client.send({ID:client.ID},STATES.SETUP_DONE);
 
     Logger.log("Setup done!", client.ID, CONSTANTS.TYPES[client.TYPE]);
 }

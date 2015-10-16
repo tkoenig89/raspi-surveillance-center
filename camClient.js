@@ -27,11 +27,13 @@ var cam_client = (function () {
 
     function handleSetupRequest(client) {
         client.send({
-            type: TYPES.CAM_CLIENT
+            type: TYPES.CAM_CLIENT,
+            ID: client.ID || -1
         }, STATES.SETUP);
     }
 
-    function handleSetupDone(client) {
+    function handleSetupDone(client,data) {
+        client.ID = data.ID;
         Logger.log("Connection established");
     }
 

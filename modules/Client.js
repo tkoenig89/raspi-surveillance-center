@@ -49,11 +49,12 @@ ClientConnection.prototype.connect = function connect(isReconnect) {
                 
                 this.on(STATES.PONG, function (server) {
                     //reset pingcount after successful pong
+                    Logger.log("pong");
                     this._pingsent = 0;
                 });
 
             }
-            handlePingPong();
+            handlePingPong(this);
             
             //map ws events to eventlisterns of the client
             this._setupWebSocketEvents();
@@ -102,7 +103,8 @@ function handlePingPong(client) {
         function doThePing() {
             client.ping();
             client._pingsent++;
-
+            
+            Logger.log("ping");
             //start another ping after a while
             _pingServer(client);
         }

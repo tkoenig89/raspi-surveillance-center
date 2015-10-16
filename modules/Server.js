@@ -76,7 +76,18 @@ Server.prototype.idTracker = (function () {
         return _id++;
     };
 })();
-
+/*
+* This will return a client connection with the given id.
+*/
+Server.prototype.findClientById = function findClientById(id){
+    var len = this.clients.length;
+    for(var i = 0 ; i <len; i++ ){
+        var cl = this.clients[i];
+        if(cl.ID === id){
+            return cl;
+        }
+    }
+}
 Server.prototype.removeClient = function removeClient(clientConnection) {
     Logger.log("removing client");
     var idx = this.clients.indexOf(clientConnection);

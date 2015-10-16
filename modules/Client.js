@@ -44,7 +44,9 @@ ClientConnection.prototype.connect = function connect(isReconnect) {
         if (this.ws) {
             if (!isReconnect) {
                 this.on(STATES.CONNECTION_OPENED, function (client) {
+                    //reset reconnect values on successful connect
                     client.connection.attemps = 0;
+                    client.connection.retryTime = 5000;
                 });
                 
                 this.on(STATES.PONG, function (server) {

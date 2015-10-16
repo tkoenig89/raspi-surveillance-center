@@ -1,0 +1,10 @@
+<div class="login-wrapper">
+    <div ng-show="showLogin">
+        <input type="text" ng-model="user" placeholder="Username" />
+        <input type="password" ng-model="pw" placeholder="Password" />
+        <button ng-click="login()">Login</button>
+    </div>
+    <div ng-hide="showLogin">
+        You are logged in!
+    </div>
+</div>

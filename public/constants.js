@@ -1,13 +1,13 @@
 var CONST = {
     SERVICE_URL: "localhost",
-	SERVICE_PORT: 8080,
-	SECURE_CONNECTION: false,
+    SERVICE_PORT: 8080,
+    SECURE_CONNECTION: false,
     TOKEN_HEADER: "security-token",
     TOKEN_TIMEOUT: 60, //minutes
     TOKEN_ALGORITHM: "HS512",
-	LOG_MODE: 2, //0: nothing, 1: error only, 2: everything
-	TIME_BETWEEN_PINGS: 30, //seconds between pings 
-    
+    LOG_MODE: 2, //0: nothing, 1: error only, 2: everything
+    TIME_BETWEEN_PINGS: 10, //seconds between pings 
+
     STATES: {
         SETUP: 1,
         SETUP_REQ: 2,

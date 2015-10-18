@@ -8,8 +8,9 @@ var Server = require("./modules/Server"),
 
 var server = new Server({
     port: CONSTANTS.SERVICE_PORT,
-	keyFile: CONSTANTS.SECURE_CONNECTION && (__dirname + "/sslcert/key.pem"),
-	certFile: CONSTANTS.SECURE_CONNECTION && (__dirname + "/sslcert/cert.pem")
+    keyFile: CONSTANTS.SECURE_CONNECTION && (__dirname + "/sslcert/key.pem"),
+    certFile: CONSTANTS.SECURE_CONNECTION && (__dirname + "/sslcert/cert.pem"),
+    sessionID: ServerSecurity.getSessionID()
 });
 
 server.on("http", function (serv, req, res, path) {
@@ -52,7 +53,7 @@ function handleHttp(req, res, path) {
         } else if (path.indexOf("/private/") == 0) {
             //accessing the private area
             Logger.log(path);
-            hasAccess = ServerSecurity.testUserAccess(req,"Admin,Read,View");
+            hasAccess = ServerSecurity.testUserAccess(req, "Admin,Read,View");
             if (hasAccess) {
                 //access granted
                 provideFile(req, res, path);
@@ -62,7 +63,7 @@ function handleHttp(req, res, path) {
                 res.end("Denied");
             }
         } else if (path == "/refreshimage" && req.method == "POST") {
-            hasAccess = ServerSecurity.testUserAccess(req,"Admin,Read,View");
+            hasAccess = ServerSecurity.testUserAccess(req, "Admin,Read,View");
             if (hasAccess) {
                 //access granted
                 requestUpdatedImage();

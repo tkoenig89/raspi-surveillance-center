@@ -164,7 +164,8 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
 
     function getClientID() {
         if (typeof (Storage) !== "undefined") {
-            return localStorage.rscClientID;
+            var id = localStorage.rscClientID;
+            return parseInt(id);
         } else {
             return -1;
         }

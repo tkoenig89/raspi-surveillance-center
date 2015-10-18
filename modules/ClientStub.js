@@ -63,7 +63,7 @@ function handleSetup(client, data) {
     //send setup completion notice
     //client.sendEventOnly(STATES.SETUP_DONE);
     client.send({
-        ID: client.ID
+        ID: (client.server.SessionID + client.ID)
     }, STATES.SETUP_DONE);
 
     Logger.log("Setup done!", client.ID, CONSTANTS.TYPES[client.TYPE]);
@@ -73,7 +73,7 @@ function handleSetup(client, data) {
 function handleBinaryStart(client, data) {
     var fStream = client.binary.stream;
     if (!fStream) {
-        var path = client.binary.imgPath = "/private/" + data.fileName;
+        var path = client.binary.imgPath = "/../private/" + data.fileName;
         Logger.log("Image:", __dirname + path);
         fStream = client.binary.stream = fs.createWriteStream(__dirname + path);
     }

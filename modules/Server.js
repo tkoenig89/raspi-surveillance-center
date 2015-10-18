@@ -12,9 +12,10 @@ function Server(config) {
     this.eventListeners = {};
     this.TYPE = "Server";
     this.ID = this.idTracker();
-    
+
     this.clients = [];
     this.httpServer = null;
+    this.SessionID = config.sessionID;
     this.ws = null;
     var self = this;
 
@@ -77,13 +78,13 @@ Server.prototype.idTracker = (function () {
     };
 })();
 /*
-* This will return a client connection with the given id.
-*/
-Server.prototype.findClientById = function findClientById(id){
+ * This will return a client connection with the given id.
+ */
+Server.prototype.findClientById = function findClientById(id) {
     var len = this.clients.length;
-    for(var i = 0 ; i <len; i++ ){
+    for (var i = 0; i < len; i++) {
         var cl = this.clients[i];
-        if(cl.ID === id){
+        if (cl.ID === id) {
             return cl;
         }
     }
@@ -96,10 +97,10 @@ Server.prototype.removeClient = function removeClient(clientConnection) {
     }
 };
 
-Server.prototype.getClientsByType = function getClientsByType(type){
+Server.prototype.getClientsByType = function getClientsByType(type) {
     var found = [];
-    this.clients.forEach(function(cl,i){
-        if(cl.TYPE == type){
+    this.clients.forEach(function (cl, i) {
+        if (cl.TYPE == type) {
             found.push(cl);
         }
     });

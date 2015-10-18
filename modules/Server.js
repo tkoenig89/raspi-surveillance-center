@@ -73,9 +73,9 @@ Server.prototype.addClient = function addClient(ws_client) {
 };
 Server.prototype.idTracker = (function () {
     //client id is based on the server session
-    var _id = this.SessionID + 1;
+    var _id = 1;
     return function () {
-        return _id++;
+        return (this.SessionID + (_id++));
     };
 })();
 /*

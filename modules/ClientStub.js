@@ -63,7 +63,7 @@ function handleSetup(client, data) {
     //send setup completion notice
     //client.sendEventOnly(STATES.SETUP_DONE);
     client.send({
-        ID: (client.server.SessionID + client.ID)
+        ID: client.ID
     }, STATES.SETUP_DONE);
 
     Logger.log("Setup done!", client.ID, CONSTANTS.TYPES[client.TYPE]);

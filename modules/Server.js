@@ -72,7 +72,8 @@ Server.prototype.addClient = function addClient(ws_client) {
     return clientConnection;
 };
 Server.prototype.idTracker = (function () {
-    var _id = 0;
+    //client id is based on the server session
+    var _id = this.SessionID + 1;
     return function () {
         return _id++;
     };

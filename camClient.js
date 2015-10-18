@@ -8,7 +8,7 @@ var Client = require("./modules/Client"),
 var cam_client = (function () {
     var client = new Client({
         url: CONSTANTS.SERVICE_URL + ":" + CONSTANTS.SERVICE_PORT,
-		    secure: CONSTANTS.SECURE_CONNECTION
+        secure: CONSTANTS.SECURE_CONNECTION
     });
 
     client.on(STATES.CONNECTION_OPENED, function () {
@@ -31,7 +31,7 @@ var cam_client = (function () {
         }, STATES.SETUP);
     }
 
-    function handleSetupDone(client,data) {
+    function handleSetupDone(client, data) {
         client.ID = data.ID;
         Logger.log("Connection established");
     }
@@ -60,7 +60,7 @@ var cam_client = (function () {
     function getLatestImage(client) {
         //remember path to the file and return its name
         client.binary = {
-            filePath: "/imgs/small.jpg",
+            filePath: "/imgs/now.jpg",
             fileFromDir: true
         };
         return client.binary.filePath.match(/\w+\.\w+$/)[0];
@@ -68,17 +68,17 @@ var cam_client = (function () {
 
     function sendImage(client) {
         var readStream = fs.createReadStream((client.binary.fileFromDir ? __dirname : "") + client.binary.filePath);
-            Logger.log("start",client.binary.fileFromDir,client.binary.filePath);
+        Logger.log("start", client.binary.fileFromDir, client.binary.filePath);
 
         readStream.on('data', function (data) {
-            Logger.log("data",data);
+            Logger.log("data", data);
             client.ws.send(data, {
                 binary: true,
                 mask: true
             });
         });
         readStream.on("end", function (data) {
-            Logger.log("end",data);
+            Logger.log("end", data);
             client.sendEventOnly(STATES.BINARY_CLOSE);
         });
     }

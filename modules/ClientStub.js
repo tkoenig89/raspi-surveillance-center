@@ -5,10 +5,10 @@ var BaseSocket = require("./BaseSocket"),
     fs = require("fs");
 
 /*
-* Handles all the communication between server and client
-* @constructor
-*
-*/
+ * Handles all the communication between server and client
+ * @constructor
+ *
+ */
 function ClientStub(config) {
     try {
         this.ID = config.ID;
@@ -50,19 +50,21 @@ function handleClose(client) {
 function handleSetup(client, data) {
     //update connection information
     client.TYPE = data.type;
-    
+
     //try to find a open connection to this client and close the old connection
     var oldConnection = client.server.findClientById(data.ID);
-    Logger.log("Old ID:",data.ID);
-    if(oldConnection){
+    Logger.log("Old ID:", data.ID);
+    if (oldConnection) {
         Logger.log("Closing old connection");
         oldConnection.ws.close();
         handleClose(client);
     }
-    
+
     //send setup completion notice
     //client.sendEventOnly(STATES.SETUP_DONE);
-    client.send({ID:client.ID},STATES.SETUP_DONE);
+    client.send({
+        ID: client.ID
+    }, STATES.SETUP_DONE);
 
     Logger.log("Setup done!", client.ID, CONSTANTS.TYPES[client.TYPE]);
 }
@@ -71,7 +73,8 @@ function handleSetup(client, data) {
 function handleBinaryStart(client, data) {
     var fStream = client.binary.stream;
     if (!fStream) {
-        var path = client.binary.imgPath = "/../private/" + data.fileName;
+        var path = client.binary.imgPath = "/private/" + data.fileName;
+        Logger.log("Image:", __dirname + path);
         fStream = client.binary.stream = fs.createWriteStream(__dirname + path);
     }
     client.sendEventOnly(STATES.BINARY_START_ACK);
@@ -79,7 +82,7 @@ function handleBinaryStart(client, data) {
 
 //retrieve image data
 function handleBinaryData(client, data) {
-  Logger.log("Binary",data);
+    Logger.log("Binary", data);
     var fStream = client.binary.stream;
     fStream.write(data);
 }
@@ -87,7 +90,7 @@ function handleBinaryData(client, data) {
 //close the stream
 function handleBinaryClose(client, data) {
     var fStream = client.binary.stream;
-    if(fStream) fStream.end();
+    if (fStream) fStream.end();
     client.binary.stream = null;
 
     //send update to all browsers:

@@ -128,12 +128,14 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
             case CONST.STATES.SETUP_REQ:
                 ws.send(JSON.stringify({
                     pl: {
-                        type: CONST.TYPES.BROWSER_CLIENT
+                        type: CONST.TYPES.BROWSER_CLIENT,
+                        ID: getClientID()
                     },
                     ev: CONST.STATES.SETUP
                 }));
                 break;
             case CONST.STATES.SETUP_DONE:
+                setClientID(data.pl.ID);
                 break;
             case CONST.STATES.NEW_IMAGE:
                 if (imgCallback) {
@@ -154,6 +156,19 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
         }
     }
 
+    function setClientID(id) {
+        if (id && typeof (Storage) !== "undefined") {
+            localStorage.rscClientID = id;
+        }
+    }
+
+    function getClientID() {
+        if (typeof (Storage) !== "undefined") {
+            return localStorage.rscClientID;
+        } else {
+            return -1;
+        }
+    }
 
     /**    
      * Will request a new image from the server    

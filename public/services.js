@@ -182,8 +182,12 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
         //ask for new image
         $http.post("/refreshimage").success(function (data) {
             if (data.indexOf("Granted") === 0) {
-                var imgPath = data.split(";")[1];
-                _defered.notify(imgPath + "?c=" + (_imgCounter++));
+                var spl = data.split(";");
+                var imgPath = spl[1];
+                _defered.notify({
+                    path: imgPath + "?c=" + (_imgCounter++),
+                    time: spl[2]
+                });
             }
         }).error(function (error) {
             console.log(error);
@@ -195,7 +199,10 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
     //connect to the websocket server and listen for image updates
     openWebSocket().onImage(function (data) {
         if (_defered) {
-            _defered.notify(data.imgPath + "?c=" + (_imgCounter++));
+            _defered.notify({
+                path: data.imgPath + "?c=" + (_imgCounter++),
+                time: data.TimeStamp
+            });
         }
 
     });
@@ -203,7 +210,7 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
     return {
         getImage: getImage
     }
-}]);
+            }]);
 
 /*services.factory("rscLoginService", [function () {
 

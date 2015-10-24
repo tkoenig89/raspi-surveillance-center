@@ -99,9 +99,7 @@ function handleBinaryClose(client, data) {
     var browsers = client.server.getClientsByType(CONSTANTS.TYPES.BROWSER_CLIENT);
     if (browsers.length > 0) {
         for (var i in browsers)
-            browsers[i].send({
-                imgPath: client.binary.imgPath
-            }, CONSTANTS.STATES.NEW_IMAGE);
+            browsers[i].send(imgWrapper.getImg(), CONSTANTS.STATES.NEW_IMAGE);
     }
 }
 

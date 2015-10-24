@@ -51,7 +51,8 @@ Server.prototype.ImageWrapper = (function ImgWrapper() {
 
     function Img(path) {
         this.Filepath = path;
-        this.TimeStamp = new Date();
+        var d = new Date();
+        this.TimeStamp = d.getHours() + ":" + d.getMinutes();
     }
 })();
 
@@ -99,10 +100,10 @@ function handleHttp(req, res, path) {
 
                 var img = server.ImageWrapper.getImg();
                 if (img) {
-                    response += ";" + img.Filepath + ";" + img.TimeStamp.getHours() + ":" + img.TimeStamp.getMinutes();
+                    response += ";" + img.Filepath + ";" + img.TimeStamp;
                 }
 
-                requestUpdatedImage(img ? false : true);
+                requestUpdatedImage();
 
                 res.writeHead(200);
                 res.end(response);

@@ -34,8 +34,9 @@ directives.directive("rscCamview", ["rscCamService", function (CamService) {
         templateUrl: "/public/templates/cameraSection.html",
         link: function (scope, elem, attrs) {
             scope.updateImage = function updateImage() {
-                CamService.getImage().then(null, null, function (imgUrl) {
-                    scope.camImgSrc = imgUrl;
+                CamService.getImage().then(null, null, function (data) {
+                    scope.camImgSrc = data.path;
+                    scope.camTime = data.time;
 
                     //repeat image request if selected
                     if (scope.repeatRequest) {

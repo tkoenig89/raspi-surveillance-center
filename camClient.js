@@ -34,6 +34,9 @@ var cam_client = (function () {
     function handleSetupDone(client, data) {
         client.ID = data.ID;
         Logger.log("Connection established");
+
+        //send image when setup is done
+        handleImgRequest(client);
     }
 
     function handleClose(client) {
@@ -48,7 +51,7 @@ var cam_client = (function () {
     }
 
     function handleImgRequest(client, data) {
-        Logger.log("img request arived");
+        Logger.log("Img request");
         //get the latest image
         var fileName = getLatestImage(client);
         //and prepare server for sending if binary data
@@ -60,8 +63,8 @@ var cam_client = (function () {
     function getLatestImage(client) {
         //remember path to the file and return its name
         client.binary = {
-            filePath: "/imgs/now.jpg",
-            fileFromDir: true
+            filePath: CONSTANTS.CLIENT_IMG_FOLDER + "/now.jpg",
+            fileFromDir: CONSTANTS.CLIENT_USE_PRJFOLDER
         };
         return client.binary.filePath.match(/\w+\.\w+$/)[0];
     }

@@ -74,7 +74,6 @@ function handleBinaryStart(client, data) {
     var fStream = client.binary.stream;
     if (!fStream) {
         var path = client.binary.imgPath = "/../private/" + data.fileName;
-        Logger.log("Image:", __dirname + path);
         fStream = client.binary.stream = fs.createWriteStream(__dirname + path);
     }
     client.sendEventOnly(STATES.BINARY_START_ACK);
@@ -92,6 +91,9 @@ function handleBinaryClose(client, data) {
     var fStream = client.binary.stream;
     if (fStream) fStream.end();
     client.binary.stream = null;
+
+    var imgWrapper = client.server.ImageWrapper;
+    imgWrapper.setImg(client.binary.imgPath);
 
     //send update to all browsers:
     var browsers = client.server.getClientsByType(CONSTANTS.TYPES.BROWSER_CLIENT);

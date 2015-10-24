@@ -27,6 +27,35 @@ server.on("connected", function (serv, ws) {
     server.clients.push(clientStub);
 });
 
+
+Server.prototype.ImageWrapper = (function ImgWrapper() {
+    var _img = null;
+
+    return {
+        setImg: _setImg,
+        getImg: _getImg,
+        hasImg: _hasImg
+    };
+
+    function _setImg(imgPath) {
+        _img = new Img(imgPath);
+    }
+
+    function _hasImg() {
+        return _img ? true : false;
+    }
+
+    function _getImg() {
+        return _img;
+    }
+
+    function Img(path) {
+        this.Filepath = path;
+        this.TimeStamp = new Date();
+    }
+})();
+
+
 //responds to different http requests
 function handleHttp(req, res, path) {
     var hasAccess = false;
@@ -66,10 +95,17 @@ function handleHttp(req, res, path) {
             hasAccess = ServerSecurity.testUserAccess(req, "Admin,Read,View");
             if (hasAccess) {
                 //access granted
-                requestUpdatedImage();
+                var response = "Granted";
+
+                var img = server.ImageWrapper.getImg();
+                if (img) {
+                    response += ";" + img.Filepath + ";" + img.TimeStamp.getHours() + ":" + img.TimeStamp.getMinutes();
+                }
+
+                requestUpdatedImage(img ? false : true);
 
                 res.writeHead(200);
-                res.end("Granted");
+                res.end(response);
             } else {
                 //access denied due to invalid credentials
                 res.writeHead(401);

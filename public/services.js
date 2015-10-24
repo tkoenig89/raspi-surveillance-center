@@ -180,7 +180,14 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
         }
 
         //ask for new image
-        $http.post("/refreshimage");
+        $http.post("/refreshimage").success(function (data) {
+            if (data.indexOf("Granted") === 0) {
+                var imgPath = data.split(";")[1];
+                _defered.notify(imgPath + "?c=" + (_imgCounter++));
+            }
+        }).error(function (error) {
+            console.log(error);
+        });
 
         return _defered.promise;
     }

@@ -7,6 +7,8 @@ var CONST = {
     TOKEN_ALGORITHM: "HS512",
     LOG_MODE: 2, //0: nothing, 1: error only, 2: everything
     TIME_BETWEEN_PINGS: 30, //seconds between pings 
+    CLIENT_IMG_FOLDER: "/imgs",
+    CLIENT_USE_PRJFOLDER: true,
 
     STATES: {
         SETUP: 1,

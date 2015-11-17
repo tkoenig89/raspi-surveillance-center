@@ -56,8 +56,14 @@ directives.directive("rscAdmin", [function () {
         link: function (scope, elem, attrs) {
 
         },
-        controller: [function () {
-
+        controller: ["$scope", "rscSync", function ($scope, rscSync) {
+            rscSync.on("login", function (data) {
+                if (data) {
+                    //user has successful logged in
+                } else {
+                    //user is not authorized
+                }
+            });
         }],
     };
 }]);

@@ -1,6 +1,6 @@
 var services = angular.module("rsc.services", []);
 
-services.factory("rscLoginService", ["$http", "$q", function ($http, $q) {
+services.factory("rscLoginService", ["$http", "$q", "rscSync", function ($http, $q, rscSync) {
     var _isUserLoggedIn = false;
     var _sessionToken = null;
 
@@ -15,10 +15,12 @@ services.factory("rscLoginService", ["$http", "$q", function ($http, $q) {
             .success(function (data, status, headers, config) {
                 var token = parseCookies()[CONST.TOKEN_HEADER];
                 _setToken(token);
+                rscSync.emit("login", true);
                 defered.resolve();
 
             }).error(function (error, status) {
                 console.log(error, status);
+                rscSync.emit("login", false);
                 defered.reject();
             });
 
@@ -39,10 +41,12 @@ services.factory("rscLoginService", ["$http", "$q", function ($http, $q) {
                     //update stored token
                     var token = parseCookies()[CONST.TOKEN_HEADER];
                     _setToken(token);
+                    rscSync.emit("login", true);
                     defered.resolve();
                 }
             }).error(function (error, status) {
                 console.log(error, status);
+                rscSync.emit("login", false);
                 defered.reject();
             });
         }
@@ -114,6 +118,9 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
     var _defered = null;
     var _imgCounter = 0;
 
+    return {
+        getImage: getImage
+    }
 
     /**    
      * Creates a websocket, that will listen for new camera images    
@@ -206,11 +213,107 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
         }
 
     });
+}]);
+
+/**
+ * Service to Handle multiple requests to resources
+ */
+services.factory("rscQ", ["$q", function ($q) {
+    return {
+        Create: _create
+    }
+
+    function _create() {
+        return new Queue($q);
+    }
+}]);
+
+function Queue($q) {
+    this._$q = $q;
+    this.requests = [];
+    this.resolved = false;
+    this.rejected = false;
+    this.resolveData = null;
+    this.rejectData = null;
+}
+
+Queue.prototype = {
+    add: function () {
+        var defered = this._$q.defer();
+
+        if (this.resolved) {
+            defered.resolve(this.resolveData);
+        } else if (this.rejected) {
+            defered.reject(this.rejectData);
+        } else {
+            this.requests.push(defered);
+        }
+
+        return defered.promise;
+    },
+    notify: function notify(data) {
+        if (this.resolved || this.rejected)
+            return false;
+
+        for (var i in this.requests) {
+            var r = this.requests[i];
+            r.notify(data);
+        }
+        return true;
+    },
+    resolve: function resolve(data) {
+        if (this.resolved || this.rejected)
+            return false;
+
+        this.resolved = true;
+        this.resolveData = data;
+
+        for (var i in this.requests) {
+            var r = this.requests[i];
+            r.resolve(data);
+        }
+        return true;
+    },
+    reject: function reject(data) {
+        if (this.resolved || this.rejected)
+            return false;
+
+        this.rejected = true;
+        this.rejectData = data;
+
+        for (var i in this.requests) {
+            var r = this.requests[i];
+            r.reject(data);
+        }
+        return true;
+    }
+};
+
+services.factory("rscSync", ["rscQ", function (rscQ) {
+    var queues = [];
 
     return {
-        getImage: getImage
+        emit: _emit,
+        on: _on
     }
-            }]);
+
+    function _on(eventName, callback) {
+        var q = _getQueue(eventName);
+        q.add().then(null, null, callback);
+    }
+
+    function _emit(eventName, data) {
+        var q = _getQueue(eventName);
+        q.notify(data);
+    }
+
+    function _getQueue(name) {
+        if (!queues[name]) {
+            queues[name] = rscQ.Create();
+        }
+        return queues[name];
+    }
+}]);
 
 /*services.factory("rscLoginService", [function () {
 

@@ -49,15 +49,15 @@ ClientConnection.prototype.connect = function connect(isReconnect) {
                     client._pingsent = 0;
                     client.connection.attemps = 0;
                     client.connection.retryTime = 5000;
+
+                    handlePingPong(self);
                 });
                 this.on(STATES.PONG, function (server) {
                     //reset pingcount after successful pong
                     Logger.debug("pong");
                     self._pingsent = 0;
                 });
-
             }
-            handlePingPong(this);
 
             //map ws events to eventlisterns of the client
             this._setupWebSocketEvents();

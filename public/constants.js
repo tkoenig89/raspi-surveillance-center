@@ -5,7 +5,7 @@ var CONST = {
     TOKEN_HEADER: "security-token",
     TOKEN_TIMEOUT: 60, //minutes
     TOKEN_ALGORITHM: "HS512",
-    LOG_MODE: 2, //0: nothing, 1: error only, 2: everything
+    LOG_MODE: 2, //0: nothing, 1: error only, 2: log & error, 3: log & debug & error
     TIME_BETWEEN_PINGS: 30, //seconds between pings 
     CLIENT_IMG_FOLDER: "/imgs",
     CLIENT_USE_PRJFOLDER: true,

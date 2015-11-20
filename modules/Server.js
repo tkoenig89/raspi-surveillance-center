@@ -32,15 +32,15 @@ function Server(config) {
 
     //create either an https or http server
     if (secureConfig) {
-        Logger.log("creating https server...");
+        Logger.log("Creating https server...");
         this.httpServer = https.createServer(secureConfig, _onHttp);
     } else {
-        Logger.log("creating http server...");
+        Logger.log("Creating http server...");
         this.httpServer = http.createServer(_onHttp);
     }
     //listen on the configured port
     this.httpServer.listen(config.port);
-    Logger.log("listening on port", config.port);
+    Logger.log("Listening on port", config.port);
 
     //wrap ssl server into websocket server
     this.ws = new wSocket.Server({
@@ -51,7 +51,7 @@ function Server(config) {
     //forward http requests
     function _onHttp(req, res) {
         var path = url.parse(req.url).pathname;
-        Logger.log("HTTP", req.method, path);
+        Logger.debug("HTTP", req.method, path);
 
         //emit http event
         self._handleEvent("http", req, res, path);

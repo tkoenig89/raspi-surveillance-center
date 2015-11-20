@@ -52,13 +52,13 @@ ClientConnection.prototype.connect = function connect(isReconnect) {
                 });
                 this.on(STATES.PONG, function (server) {
                     //reset pingcount after successful pong
-                    Logger.log("pong");
+                    Logger.debug("pong");
                     self._pingsent = 0;
                 });
 
             }
             handlePingPong(this);
-            
+
             //map ws events to eventlisterns of the client
             this._setupWebSocketEvents();
         }
@@ -88,32 +88,32 @@ ClientConnection.prototype.reconnect = function reconnect() {
  * handles ping pong between client and the server. Starts reconnect after 2 failed pings
  */
 function handlePingPong(client) {
-    Logger.log("Setup ping-pong");
+    Logger.debug("Setup ping-pong");
     var pingTimeout = CONST.TIME_BETWEEN_PINGS * 1000;
     client.sendPing = true;
     client._pingsent = 0;
-    
+
     //start pinging
     _pingServer();
-    
+
     function _pingServer() {
         if (client.sendPing) {
             if (client._pingsent < 3) {
                 setTimeout(doThePing, pingTimeout);
             } else {
                 // connection seems to be lost
-                Logger.log(client.sendPing,client._pingsent);
+                Logger.debug("Connection lost", client._pingsent);
                 client.reconnect();
             }
 
         }
 
         function doThePing() {
-            if(client.sendPing){
+            if (client.sendPing) {
                 client.ping();
                 client._pingsent++;
 
-                Logger.log("ping");
+                Logger.debug("ping");
                 //start another ping after a while
                 _pingServer(client);
             }

@@ -81,7 +81,7 @@ function handleBinaryStart(client, data) {
 
 //retrieve image data
 function handleBinaryData(client, data) {
-    Logger.log("Binary", data);
+    Logger.debug("Binary", data);
     var fStream = client.binary.stream;
     fStream.write(data);
 }

@@ -42,7 +42,7 @@ Basesocket.prototype = {
      * forwards the received payload and this connection wrapper based on the event
      */
     _handleEvent: function handleEvent(event, param) {
-        //Logger.log(event, this.ID, this.TYPE);
+        Logger.debug(event, this.ID, this.TYPE);
         var callbacks;
         var _event = event;
 
@@ -82,10 +82,10 @@ Basesocket.prototype = {
     },
     ping: function ping() {
         if (this.ws) {
-            try{
+            try {
                 this.ws.ping();
-            }catch(ex){
-                Logger.err("Exception on ping:",ex.message);
+            } catch (ex) {
+                Logger.err("Exception on ping:", ex.message);
             }
         }
     },

@@ -71,17 +71,17 @@ var cam_client = (function () {
 
     function sendImage(client) {
         var readStream = fs.createReadStream((client.binary.fileFromDir ? __dirname : "") + client.binary.filePath);
-        Logger.log("start", client.binary.fileFromDir, client.binary.filePath);
+        Logger.debug("start", client.binary.fileFromDir, client.binary.filePath);
 
         readStream.on('data', function (data) {
-            Logger.log("data", data);
+            Logger.debug("data", data);
             client.ws.send(data, {
                 binary: true,
                 mask: true
             });
         });
         readStream.on("end", function (data) {
-            Logger.log("end", data);
+            Logger.debug("end", data);
             client.sendEventOnly(STATES.BINARY_CLOSE);
         });
     }

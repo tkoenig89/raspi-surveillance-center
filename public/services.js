@@ -17,7 +17,6 @@ services.factory("rscLoginService", ["$http", "$q", "rscSync", function ($http, 
                 _setToken(token);
                 rscSync.emit("login", true);
                 defered.resolve();
-
             }).error(function (error, status) {
                 console.log(error, status);
                 rscSync.emit("login", false);
@@ -114,68 +113,22 @@ services.factory("rscLoginService", ["$http", "$q", "rscSync", function ($http, 
     }
 }]);
 
-services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
+services.factory("rscCamService", ["$http", "$q", "rscWebService", function ($http, $q, wSocket) {
     var _defered = null;
     var _imgCounter = 0;
 
+    //connect to the websocket server and listen for image updates
+    wSocket.listen(CONST.STATES.NEW_IMAGE).then(null, null, function (data) {
+        if (_defered) {
+            _defered.notify({
+                path: data.Filepath + "?c=" + (_imgCounter++),
+                time: data.TimeStamp
+            });
+        }
+    });
+
     return {
         getImage: getImage
-    }
-
-    /**    
-     * Creates a websocket, that will listen for new camera images    
-     */
-    function openWebSocket() {
-        var ws = new WebSocket((CONST.SECURE_CONNECTION ? "wss:" : "ws:") + "//" + CONST.SERVICE_URL + ":" + CONST.SERVICE_PORT);
-        var imgCallback = null;
-
-        ws.onmessage = function (event) {
-            var data = JSON.parse(event.data);
-            switch (data.ev) {
-            case CONST.STATES.SETUP_REQ:
-                ws.send(JSON.stringify({
-                    pl: {
-                        type: CONST.TYPES.BROWSER_CLIENT,
-                        ID: getClientID()
-                    },
-                    ev: CONST.STATES.SETUP
-                }));
-                break;
-            case CONST.STATES.SETUP_DONE:
-                setClientID(data.pl.ID);
-                break;
-            case CONST.STATES.NEW_IMAGE:
-                if (imgCallback) {
-                    imgCallback(data.pl);
-                }
-                break;
-            }
-        }
-
-        function onImage(fn) {
-            if (fn) {
-                imgCallback = fn;
-            }
-        }
-
-        return {
-            onImage: onImage
-        }
-    }
-
-    function setClientID(id) {
-        if (id && typeof (Storage) !== "undefined") {
-            localStorage.rscClientID = id;
-        }
-    }
-
-    function getClientID() {
-        if (typeof (Storage) !== "undefined") {
-            var id = localStorage.rscClientID;
-            return parseInt(id);
-        } else {
-            return -1;
-        }
     }
 
     /**    
@@ -203,16 +156,6 @@ services.factory("rscCamService", ["$http", "$q", function ($http, $q) {
         return _defered.promise;
     }
 
-    //connect to the websocket server and listen for image updates
-    openWebSocket().onImage(function (data) {
-        if (_defered) {
-            _defered.notify({
-                path: data.imgPath + "?c=" + (_imgCounter++),
-                time: data.TimeStamp
-            });
-        }
-
-    });
 }]);
 
 /**
@@ -318,3 +261,90 @@ services.factory("rscSync", ["rscQ", function (rscQ) {
 /*services.factory("rscLoginService", [function () {
 
 }]);*/
+
+services.factory("rscWebService", ["rscQ", function (rscQ) {
+    var eventQueues = [];
+    var ws = null;
+    //open connection to the server
+    _openWebSocket();
+
+    return {
+        waitFor: _waitFor,
+        listen: _listen,
+        send: _send
+    }
+
+    function _waitFor() {
+        //TODO    
+    }
+
+    function _send() {
+        //TODO
+    }
+
+    //allows listening to events received at the websocket    
+    function _listen(eventName) {
+        var queue = getQueue(eventName);
+        var promise = queue.add();
+
+        return promise;
+    }
+
+    function _openWebSocket() {
+        ws = new WebSocket((CONST.SECURE_CONNECTION ? "wss:" : "ws:") + "//" + CONST.SERVICE_URL + ":" + CONST.SERVICE_PORT);
+        ws.onmessage = _handleMessage;
+    }
+
+    function _handleMessage(event) {
+        var data = JSON.parse(event.data);
+        switch (data.ev) {
+        case CONST.STATES.SETUP_REQ:
+            ws.send(JSON.stringify({
+                pl: {
+                    type: CONST.TYPES.BROWSER_CLIENT,
+                    ID: getClientID()
+                },
+                ev: CONST.STATES.SETUP
+            }));
+            break;
+        case CONST.STATES.SETUP_DONE:
+            setClientID(data.pl.ID);
+            break;
+        default:
+            _notifyListeners(data);
+        }
+    }
+
+    function _notifyListeners(eventData) {
+        if (eventData && eventData.ev) {
+            var queue = getQueue(eventData.ev);
+            queue.notify(eventData.pl);
+        } else {
+            console.error("No valid eventdata received!");
+        }
+    }
+
+    function getQueue(eventName) {
+        if (!eventQueues[eventName]) {
+            eventQueues[eventName] = rscQ.Create();
+        }
+        return eventQueues[eventName];
+    }
+
+    //stores the id received from the server in the local storage
+    function setClientID(id) {
+        if (id && typeof (Storage) !== "undefined") {
+            localStorage.rscClientID = id;
+        }
+    }
+
+    //if available will read the last id from the local storage
+    function getClientID() {
+        if (typeof (Storage) !== "undefined") {
+            var id = localStorage.rscClientID;
+            return parseInt(id);
+        } else {
+            return -1;
+        }
+    }
+}]);

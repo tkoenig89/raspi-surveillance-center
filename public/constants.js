@@ -40,7 +40,7 @@ var CONST = {
     ROLES: {
         ADMIN: "yxa23289u09asdj290",
         VIEWER: "8u3jhndas8921jn9w"
-    }
+    },
     MIME_TYPES: {
         js: "application/javascript",
         html: "text/html",

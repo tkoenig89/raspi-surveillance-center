@@ -63,7 +63,7 @@ var cam_client = (function () {
     function getLatestImage(client) {
         //remember path to the file and return its name
         client.binary = {
-            filePath: CONSTANTS.CLIENT_IMG_FOLDER + "/now.jpg",
+            filePath: CONSTANTS.CLIENT_IMG_FOLDER + "/" + CONSTANTS.CLIENT_IMG_FILENAME,
             fileFromDir: CONSTANTS.CLIENT_USE_PRJFOLDER
         };
         return client.binary.filePath.match(/\w+\.\w+$/)[0];

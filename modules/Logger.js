@@ -1,4 +1,4 @@
-var CONST = require("../public/constants");
+var CONFIG = require("../config.js");
 
 function getTimeString() {
     var d = new Date();
@@ -7,7 +7,7 @@ function getTimeString() {
 }
 
 var Logger = function () {
-    var logMode = CONST.LOG_MODE;
+    var logMode = CONFIG.LOGGER.LOG_MODE;
     switch (logMode) {
     case 0:
         this.log_msg = false;

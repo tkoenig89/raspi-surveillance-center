@@ -1,5 +1,6 @@
 var BaseSocket = require("./BaseSocket"),
     CONSTANTS = require("../public/constants"),
+    CONFIG = require("../config.js"),
     STATES = CONSTANTS.STATES,
     Logger = require("./Logger"),
     ServerSecurity = require("./Security.js"),
@@ -12,14 +13,15 @@ var BaseSocket = require("./BaseSocket"),
  */
 function ClientStub(config) {
     try {
-        this.ID = config.ID;
+        this.ID = -2;
+        this.Name = "";
         this.eventListeners = {};
         this.ws = config.ws;
         this.server = config.server;
         this.binary = {
             stream: null,
             imgPath: null,
-            imgName: null,
+            imgName: null
         };
 
         //configure the internal eventhandlers
@@ -50,8 +52,8 @@ function handleClose(client) {
     client.server.removeClient(client);
 
     //remove the image from hdd
+    client.server.ImageWrapper.DeaktivateCam(client.Name);
     broadcastImageUpdate(client, true);
-    client.server.ImageWrapper.RemoveCam(client.ID);
     client = null;
 }
 
@@ -68,6 +70,11 @@ function handleSetup(client, data) {
         handleClose(client);
     }
 
+    //set client id & name
+    client.ID = client.server.idTracker(data.ID);
+    client.Name = data.Name || client.ID;
+    Logger.debug("Client Name:", client.Name);
+
     //send setup completion notice
     //client.sendEventOnly(STATES.SETUP_DONE);
     client.send({
@@ -83,7 +90,7 @@ function handleBinaryStart(client, data) {
     if (!fStream) {
         var binary = client.binary;
         binary.imgPath = "/private/";
-        binary.imgName = client.ID + "_" + data.fileName;
+        binary.imgName = client.Name + "_" + data.fileName;
         var path = binary.imgPath + binary.imgName;
         Logger.debug(__dirname);
         fStream = binary.stream = fs.createWriteStream(__dirname + "/.." + path);
@@ -106,10 +113,14 @@ function handleBinaryClose(client, data) {
     binary.stream = null;
 
     var imgWrapper = client.server.ImageWrapper;
-    imgWrapper.SetCam(client.ID, binary.imgPath + binary.imgName);
+    imgWrapper.SetCam(client.Name, client.ID, binary.imgPath + binary.imgName);
 
     //notify the browsers
     broadcastImageUpdate(client);
+
+    if (CONFIG.SERVER.archiveImages) {
+        archiveImage(client);
+    }
 }
 
 function handleCamListRequest(client, data) {
@@ -150,7 +161,72 @@ function broadcastImageUpdate(client, removed) {
     var browsers = client.server.getClientsByType(CONSTANTS.TYPES.BROWSER_CLIENT);
     if (browsers.length > 0) {
         for (var i in browsers)
-            browsers[i].send(imgWrapper.GetCam(client.ID), stateToSend);
+            browsers[i].send(imgWrapper.GetCam(client.Name), stateToSend);
+    }
+}
+
+function archiveImage(client) {
+    try {
+        var imgWrapper = client.server.ImageWrapper;
+        var cam = imgWrapper.GetCam(client.Name);
+
+        var targetFolder = CONFIG.SERVER.archiveFolder + cam.Name + "/";
+        var fileName = getTimeStamp(new Date()) + cam.Filepath.substr(cam.Filepath.lastIndexOf("."));
+        var targetPath = targetFolder + fileName;
+        var sourcePath = __dirname + "/.." + cam.Filepath;
+
+        //make sure the folder exists
+        var stats = null;
+        try {
+            var stats = fs.statSync(targetFolder);
+        } catch (ex) {}
+        if (!stats || !stats.isDirectory()) {
+            fs.mkdirSync(targetFolder);
+        }
+
+        Logger.debug("Copy From:", sourcePath);
+        Logger.debug("Copy To:", targetPath);
+
+        //copy file
+        fs.createReadStream(sourcePath).pipe(fs.createWriteStream(targetPath));
+
+        Logger.debug("Copy Done!");
+
+        cleanFolder(targetFolder, 10);
+    } catch (ex) {
+        Logger.err("Archive Error", cam, ex.message);
+    }
+
+    function getTimeStamp(dateObj) {
+        var dateStr = dateObj.getFullYear() + padStr(dateObj.getMonth() + 1) + padStr(dateObj.getDate());
+        var timeStr = padStr(dateObj.getHours()) + padStr(dateObj.getMinutes());
+        return dateStr + "T" + timeStr;
+    }
+
+    function padStr(i) {
+        return i < 10 ? "0" + i : i.toString();
+    }
+}
+
+function cleanFolder(folderPath, maxFiles) {
+    try {
+        Logger.debug("Cleaning archive:", folderPath);
+        maxFiles = maxFiles || 20;
+        fs.readdir(folderPath, function (err, files) {
+            if (err) {
+                return;
+            } else {
+                if (files && files.length > maxFiles) {
+                    var len = files.length;
+                    for (var i = maxFiles; i < len; i++) {
+                        var fileName = files[i];
+                        fs.unlinkSync(folderPath + fileName);
+                    }
+                }
+            }
+        });
+    } catch (ex) {
+        Logger.err("Cleaning Error", folderPath, ex.message);
     }
 }
 

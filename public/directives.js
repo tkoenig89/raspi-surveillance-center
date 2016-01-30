@@ -89,8 +89,9 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", "$timeout", func
                             if (cam.ID != scope.SelectedCam.ID) {
                                 cam.HasNewImage = true;
                             }
-                            var browserCam = getCamById(cam.ID);
+                            var browserCam = getCamByName(cam.Name);
                             if (browserCam) {
+                                browserCam.IsConnected = cam.IsConnected;
                                 browserCam.ImgIdx = browserCam.ImgIdx || 0;
                                 browserCam.TimeStamp = cam.TimeStamp;
                                 browserCam.Filepath = cam.Filepath + "?c=" + (browserCam.ImgIdx++);
@@ -103,21 +104,21 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", "$timeout", func
 
                     CamService.WaitForCamRemove().then(null, null, function (cam) {
                         if (cam) {
-                            var browserCam = getCamById(cam.ID);
+                            var browserCam = getCamByName(cam.Name);
                             if (browserCam) {
-                                browserCam.HasBeenRemoved = true;
+                                browserCam.IsConnected = false;
                             }
                         }
                     });
                 }
             }
 
-            function getCamById(id) {
-                if (id) {
+            function getCamByName(name) {
+                if (name) {
                     var len = scope.CamList.length;
                     for (var i = 0; i < len; i++) {
                         var cam = scope.CamList[i];
-                        if (cam.ID == id) {
+                        if (cam.Name == name) {
                             return cam;
                         }
                     }

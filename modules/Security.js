@@ -1,5 +1,5 @@
 var jwt = require("jsonwebtoken"),
-    CONST = require("../public/constants"),
+    CONFIG = require("../config.js"),
     secret = "jksaniobkv893nfi982nfalkid983nbf",
     sessionID = Math.floor(Math.random() * 100000);
 
@@ -42,7 +42,7 @@ var ServerSecurity = (function () {
     }
 
     function setTokenCookie(res, token) {
-        res.setHeader('Set-Cookie', CONST.TOKEN_HEADER + '=' + token);
+        res.setHeader('Set-Cookie', CONFIG.AUTHENTICATION.TOKEN_HEADER + '=' + token);
     }
 
     function getRoleFromLogin(user, pw) {
@@ -112,8 +112,8 @@ var ServerSecurity = (function () {
             x: sessionID,
             y: role
         }, secret, {
-            algorithm: CONST.TOKEN_ALGORITHM,
-            expiresInMinutes: CONST.TOKEN_TIMEOUT
+            algorithm: CONFIG.AUTHENTICATION.TOKEN_ALGORITHM,
+            expiresInMinutes: CONFIG.AUTHENTICATION.TOKEN_TIMEOUT
         });
         return token;
     }
@@ -123,12 +123,12 @@ var ServerSecurity = (function () {
         var token = null;
         if (typeof (req) === "object") {
             //get token from req
-            token = parseCookies(req)[CONST.TOKEN_HEADER];
+            token = parseCookies(req)[CONFIG.AUTHENTICATION.TOKEN_HEADER];
         }
         if (token) {
             try {
                 var decoded = jwt.verify(token, secret, {
-                    algorithm: CONST.TOKEN_ALGORITHM
+                    algorithm: CONFIG.AUTHENTICATION.TOKEN_ALGORITHM
                 });
                 if (decoded && decoded.x === sessionID)
                     return decoded;
@@ -166,7 +166,7 @@ var ServerSecurity = (function () {
     function testToken(providedToken, requiredRoles) {
         if (providedToken) {
             var decoded = jwt.verify(providedToken, secret, {
-                algorithm: CONST.TOKEN_ALGORITHM
+                algorithm: CONFIG.AUTHENTICATION.TOKEN_ALGORITHM
             });
             if (decoded && decoded.x === sessionID && requiredRoles.indexOf(Roles.getByID(decoded.y)) >= 0) {
                 return true;

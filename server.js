@@ -21,7 +21,6 @@ server.on("connected", function (serv, ws) {
     //add a newly connected client to the clientList and send setup request
     var clientStub = new ClientStub({
         ws: ws,
-        ID: server.idTracker(),
         server: server
     });
     server.clients.push(clientStub);
@@ -35,52 +34,52 @@ Server.prototype.ImageWrapper = (function ImgWrapper() {
         SetCam: setCam,
         GetCam: getCam,
         GetAllCams: getAllCams,
-        RemoveCam: removeCam
+        DeaktivateCam: deaktivateCam
     };
 
-    function setCam(clientID, imgPath) {
-        var cam = getCamById(clientID);
+    function setCam(name, id, imgPath) {
+        var cam = getCamByName(name);
         if (!cam) {
-            cam = new Camera(clientID, imgPath);
+            cam = new Camera(name, id, imgPath);
             _cams.push(cam);
         } else {
+            cam.ID = id;
+            cam.IsConnected = true;
             cam.Filepath = imgPath;
             cam.TimeStamp = getTimeStamp(new Date());
         }
     }
 
-    function getCam(id) {
-        return getCamById(id);
+    function getCam(name) {
+        return getCamByName(name);
     }
 
     function getAllCams() {
         return _cams;
     }
 
-    function removeCam(id) {
-        var idxAndCam = getCamAndIndexById(id);
-        var idx = idxAndCam[0];
-        if (idx >= 0) {
-            _cams.splice(idx, 1);
-            var fPath = idxAndCam[1].Filepath;
-            fs.unlinkSync(__dirname + fPath);
-            //TODO: remove the image from hdd
-            //idxAndCam[1].Filepath
+    function deaktivateCam(name) {
+        var cam = getCamByName(name);
+        if (cam) {
+            cam.IsConnected = false;
+            return cam;
         }
     }
 
-    function Camera(id, path) {
+    function Camera(name, id, path) {
         this.Filepath = path;
         this.ID = id;
+        this.Name = name;
         this.TimeStamp = getTimeStamp(new Date());
+        this.IsConnected = true;
     }
 
-    function getCamById(id) {
-        if (id) {
+    function getCamByName(name) {
+        if (name) {
             var len = _cams.length;
             for (var i = 0; i < len; i++) {
                 var cam = _cams[i];
-                if (cam.ID == id) {
+                if (cam.Name == name) {
                     return cam;
                 }
             }
@@ -146,6 +145,7 @@ function handleHttp(req, res, path) {
             }
         } else if (path.indexOf("/private/") == 0) {
             //accessing the private area
+            var path = decodeURI(path);
             Logger.log(path);
             hasAccess = ServerSecurity.testUserAccess(req, "Admin,Read,View");
             if (hasAccess) {
@@ -160,23 +160,6 @@ function handleHttp(req, res, path) {
     } catch (ex) {
         res.writeHead(500);
         res.end(ex.message);
-    }
-}
-
-//request a new image from the mobile client
-var lastRequest = -1;
-var requestImageOnlyEachMs = 15000;
-
-function requestUpdatedImage() {
-    var time = (new Date()).getTime();
-    //allow updates only after the defined timeframe
-    if (lastRequest < 0 || lastRequest <= time - requestImageOnlyEachMs) {
-        lastRequest = time;
-        var camClients = server.getClientsByType(CONSTANTS.TYPES.CAM_CLIENT);
-        if (camClients && camClients.length > 0) {
-            Logger.log("Camera found", camClients[0].ID);
-            camClients[0].sendEventOnly(STATES.IMG_REQ);
-        }
     }
 }
 

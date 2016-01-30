@@ -51,16 +51,8 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", function (CamSer
                 }
             });
 
-            scope.updateImage = function updateImage() {
-                CamService.getImage().then(null, null, function (data) {
-                    scope.camImgSrc = data.path;
-                    scope.camTime = data.time;
-
-                    //repeat image request if selected
-                    if (scope.repeatRequest) {
-                        setTimeout(scope.updateImage, 15000);
-                    }
-                });
+            scope.updateImage = function updateImage(id) {
+                CamService.GetImage(id);
             };
 
             function getCamList() {
@@ -69,7 +61,43 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", function (CamSer
                         //this will be called whenever there is a new list of cams available
                         scope.CamList = camList;
                     });
+
+                    CamService.WaitForCamUpdate().then(null, null, function (cam) {
+                        if (cam) {
+                            var browserCam = getCamById(cam.ID);
+                            if (browserCam) {
+                                browserCam.ImgIdx = browserCam.ImgIdx || 0;
+                                browserCam.TimeStamp = cam.TimeStamp;
+                                browserCam.Filepath = cam.Filepath + "?c=" + (browserCam.ImgIdx++);
+                            } else {
+                                cam.ImgIdx = 0;
+                                scope.CamList.push(cam);
+                            }
+                        }
+                    });
+
+                    CamService.WaitForCamRemove().then(null, null, function (cam) {
+                        if (cam) {
+                            var browserCam = getCamById(cam.ID);
+                            if (browserCam) {
+                                browserCam.HasBeenRemoved = true;
+                            }
+                        }
+                    });
                 }
+            }
+
+            function getCamById(id) {
+                if (id) {
+                    var len = scope.CamList.length;
+                    for (var i = 0; i < len; i++) {
+                        var cam = scope.CamList[i];
+                        if (cam.ID == id) {
+                            return cam;
+                        }
+                    }
+                }
+                return null;
             }
         }
     };

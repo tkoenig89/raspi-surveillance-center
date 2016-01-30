@@ -4,6 +4,7 @@
         <img width="500px" ng-src="{{cam.Filepath}}" />
         <br/>
         <span>{{cam.TimeStamp}}</span>
-        <button ng-click="updateImage(cam.ID)">RefreshImage</button>
+        <button ng-show="!cam.HasBeenRemoved" ng-click="updateImage(cam.ID)">RefreshImage</button>
+        <span ng-show="cam.HasBeenRemoved">Die Verbindung wurde unterbrochen</span>
     </section>
 </div>

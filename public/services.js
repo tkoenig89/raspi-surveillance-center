@@ -114,22 +114,13 @@ services.factory("rscLoginService", ["$http", "$q", "rscSync", function ($http, 
 }]);
 
 services.factory("rscCamService", ["$http", "$q", "rscWebService", function ($http, $q, wSocket) {
-    var _defered = null;
     var _imgCounter = 0;
 
-    //connect to the websocket server and listen for image updates
-    wSocket.listen(CONST.STATES.NEW_IMAGE).then(null, null, function (data) {
-        if (_defered) {
-            _defered.notify({
-                path: data.Filepath + "?c=" + (_imgCounter++),
-                time: data.TimeStamp
-            });
-        }
-    });
-
     return {
-        getImage: getImage,
-        GetAllCameras: getAllCameras
+        GetImage: getImage,
+        GetAllCameras: getAllCameras,
+        WaitForCamUpdate: waitForCamUpdate,
+        WaitForCamRemove: waitForCamRemove
     }
 
     function getAllCameras() {
@@ -140,28 +131,20 @@ services.factory("rscCamService", ["$http", "$q", "rscWebService", function ($ht
     /**    
      * Will request a new image from the server    
      */
-    function getImage() {
-        if (!_defered) {
-            _defered = $q.defer();
-        }
-
-        //ask for new image
-        $http.post("/refreshimage").success(function (data) {
-            if (data.indexOf("Granted") === 0) {
-                var spl = data.split(";");
-                var imgPath = spl[1];
-                _defered.notify({
-                    path: imgPath + "?c=" + (_imgCounter++),
-                    time: spl[2]
-                });
-            }
-        }).error(function (error) {
-            console.log(error);
+    function getImage(id) {
+        wSocket.send(CONST.STATES.IMG_REQ_ONE_CAMS, {
+            ID: id
         });
-
-        return _defered.promise;
     }
 
+    function waitForCamUpdate() {
+        //connect to the websocket server and listen for image updates
+        return wSocket.listen(CONST.STATES.NEW_IMAGE);
+    }
+
+    function waitForCamRemove() {
+        return wSocket.listen(CONST.STATES.REMOVED_IMAGE);
+    }
 }]);
 
 /**

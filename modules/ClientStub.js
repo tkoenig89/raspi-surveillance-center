@@ -41,6 +41,7 @@ ClientStub.prototype.setupCommuncationHandling = function setup() {
     this.on(STATES.BINARY, handleBinaryData);
     this.on(STATES.BINARY_CLOSE, handleBinaryClose);
     this.on(STATES.IMG_REQ_ALL_CAMS, handleCamListRequest);
+    this.on(STATES.IMG_REQ_ONE_CAMS, handleCamUpdateRequest);
 }
 
 function handleClose(client) {
@@ -48,6 +49,7 @@ function handleClose(client) {
     client.server.removeClient(client);
 
     //remove the image from hdd
+    broadcastImageUpdate(client, true);
     client.server.ImageWrapper.RemoveCam(client.ID);
     client = null;
 }
@@ -104,12 +106,8 @@ function handleBinaryClose(client, data) {
     var imgWrapper = client.server.ImageWrapper;
     imgWrapper.SetCam(client.ID, binary.imgPath + binary.imgName);
 
-    //send update to all browsers:
-    var browsers = client.server.getClientsByType(CONSTANTS.TYPES.BROWSER_CLIENT);
-    if (browsers.length > 0) {
-        for (var i in browsers)
-            browsers[i].send(imgWrapper.GetCam(client.ID), CONSTANTS.STATES.NEW_IMAGE);
-    }
+    //notify the browsers
+    broadcastImageUpdate(client);
 }
 
 function handleCamListRequest(client, data) {
@@ -119,6 +117,31 @@ function handleCamListRequest(client, data) {
     Logger.debug("Cameralist:", camList);
 
     client.send(camList, STATES.IMG_SEND_ALL_CAMS);
+}
+
+function handleCamUpdateRequest(client, data) {
+    Logger.debug(client.ID, "Requesting camera update for", data.ID);
+    if (data.ID) {
+        var camera = client.server.findClientById(data.ID);
+        if (camera) {
+            camera.sendEventOnly(STATES.IMG_REQ);
+        }
+    }
+}
+
+/**
+ * Will send a message to all opened browsers, with the new image
+ * @param {object} client
+ */
+function broadcastImageUpdate(client, removed) {
+    //send update to all browsers:
+    var stateToSend = removed ? CONSTANTS.STATES.REMOVED_IMAGE : CONSTANTS.STATES.NEW_IMAGE;
+    var imgWrapper = client.server.ImageWrapper;
+    var browsers = client.server.getClientsByType(CONSTANTS.TYPES.BROWSER_CLIENT);
+    if (browsers.length > 0) {
+        for (var i in browsers)
+            browsers[i].send(imgWrapper.GetCam(client.ID), stateToSend);
+    }
 }
 
 module.exports = ClientStub;

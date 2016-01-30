@@ -52,7 +52,10 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", "$timeout", func
 
             scope.ShowDetails = function showDetails(cam) {
                 if (cam) {
+                    markAllAsInactive(scope.CamList);
+
                     cam.HasNewImage = false;
+                    cam.IsActive = true;
                     scope.SelectedCam = cam;
                 }
             };
@@ -125,6 +128,12 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", "$timeout", func
             function markAllAsNew(camList) {
                 for (var i in camList) {
                     camList[i].HasNewImage = true;
+                }
+            }
+
+            function markAllAsInactive(camList) {
+                for (var i in camList) {
+                    camList[i].IsActive = false;
                 }
             }
         }

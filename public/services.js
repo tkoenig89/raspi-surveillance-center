@@ -107,13 +107,23 @@ services.factory("rscLoginService", ["$http", "$q", "rscSync", function ($http, 
         return list;
     }
 
+    function addTokenToWSRequest(data) {
+        if (!data) {
+            data = {};
+        }
+
+        data.token = _getToken();
+        return data;
+    }
+
     return {
         login: login,
+        AddTokenToWSRequest: addTokenToWSRequest,
         findOldSession: checkForValidToken
     }
 }]);
 
-services.factory("rscCamService", ["$http", "$q", "rscWebService", function ($http, $q, wSocket) {
+services.factory("rscCamService", ["$http", "$q", "rscWebService", "rscLoginService", function ($http, $q, wSocket, loginService) {
     var _imgCounter = 0;
 
     return {
@@ -124,7 +134,7 @@ services.factory("rscCamService", ["$http", "$q", "rscWebService", function ($ht
     }
 
     function getAllCameras() {
-        wSocket.send(CONST.STATES.IMG_REQ_ALL_CAMS, {});
+        wSocket.send(CONST.STATES.IMG_REQ_ALL_CAMS, loginService.AddTokenToWSRequest());
         return wSocket.listen(CONST.STATES.IMG_SEND_ALL_CAMS);
     }
 
@@ -132,9 +142,10 @@ services.factory("rscCamService", ["$http", "$q", "rscWebService", function ($ht
      * Will request a new image from the server    
      */
     function getImage(id) {
-        wSocket.send(CONST.STATES.IMG_REQ_ONE_CAMS, {
+        var data = loginService.AddTokenToWSRequest({
             ID: id
         });
+        wSocket.send(CONST.STATES.IMG_REQ_ONE_CAMS, data);
     }
 
     function waitForCamUpdate() {

@@ -1,10 +1,14 @@
 <div>
-    <span ng-if="!CamList.length">Leider sind aktuell keine Kameras verbunden</span>
-    <section ng-repeat="cam in CamList">
-        <img width="500px" ng-src="{{cam.Filepath}}" />
+    <section class="cam-preview">
+        <span ng-repeat="cam in CamList" ng-class="{new:cam.HasNewImage,lost:cam.HasBeenRemoved}" ng-click="ShowDetails(cam);">
+            <img class="cam-preview-img" ng-src="{{cam.Filepath}}" />
+        </span>
+    </section>
+    <span ng-show="!CamList.length">Leider sind aktuell keine Kameras verbunden</span>
+    <section ng-show="SelectedCam">
+        <img width="500px" ng-src="{{SelectedCam.Filepath}}" />
         <br/>
-        <span>{{cam.TimeStamp}}</span>
-        <button ng-show="!cam.HasBeenRemoved" ng-click="updateImage(cam.ID)">RefreshImage</button>
-        <span ng-show="cam.HasBeenRemoved">Die Verbindung wurde unterbrochen</span>
+        <span>{{SelectedCam.TimeStamp}}</span>
+        <button ng-disabled="SelectedCam.HasBeenRemoved || SelectedCam.Requesting" ng-click="UpdateImage(SelectedCam)">{{SelectedCam.HasBeenRemoved?'Verbindung unterbrochen':SelectedCam.Requesting?'Bitte warte kurz':'Aktuallisieren'}}</button>
     </section>
 </div>

@@ -25,7 +25,8 @@ directives.directive("rscLogin", ["rscLoginService", function (LoginService) {
     };
 }]);
 
-directives.directive("rscCamview", ["rscCamService", "rscSync", function (CamService, rscSync) {
+directives.directive("rscCamview", ["rscCamService", "rscSync", "$timeout", function (CamService, rscSync, $timeout) {
+    var timeBetweenRequests = 15000;
     return {
         restrict: "E",
         scope: {
@@ -38,32 +39,53 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", function (CamSer
                 login: false
             };
             scope.CamList = [];
+            scope.SelectedCam = null;
+
+            scope.UpdateImage = function updateImage(cam) {
+                CamService.GetImage(cam.ID);
+                cam.Requesting = true;
+
+                $timeout(function () {
+                    cam.Requesting = false;
+                }, timeBetweenRequests)
+            };
+
+            scope.ShowDetails = function showDetails(cam) {
+                if (cam) {
+                    cam.HasNewImage = false;
+                    scope.SelectedCam = cam;
+                }
+            };
 
             rscSync.on("ws_connected", function () {
                 ready.ws = true;
-                getCamList();
+                initImageEventListner();
             });
 
             rscSync.on("login", function (loggedIn) {
                 if (loggedIn) {
                     ready.login = true;
-                    getCamList()
+                    initImageEventListner()
                 }
             });
 
-            scope.updateImage = function updateImage(id) {
-                CamService.GetImage(id);
-            };
-
-            function getCamList() {
+            /**
+             * Will setup a few listeners to capture updates send by the server
+             */
+            function initImageEventListner() {
                 if (ready.ws && ready.login) {
                     CamService.GetAllCameras().then(null, null, function (camList) {
                         //this will be called whenever there is a new list of cams available
+                        markAllAsNew(camList);
                         scope.CamList = camList;
+                        scope.ShowDetails(camList[0]);
                     });
 
                     CamService.WaitForCamUpdate().then(null, null, function (cam) {
                         if (cam) {
+                            if (cam.ID != scope.SelectedCam.ID) {
+                                cam.HasNewImage = true;
+                            }
                             var browserCam = getCamById(cam.ID);
                             if (browserCam) {
                                 browserCam.ImgIdx = browserCam.ImgIdx || 0;
@@ -98,6 +120,12 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", function (CamSer
                     }
                 }
                 return null;
+            }
+
+            function markAllAsNew(camList) {
+                for (var i in camList) {
+                    camList[i].HasNewImage = true;
+                }
             }
         }
     };

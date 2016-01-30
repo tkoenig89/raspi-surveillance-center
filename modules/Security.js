@@ -163,10 +163,22 @@ var ServerSecurity = (function () {
         }
     }
 
+    function testToken(providedToken, requiredRoles) {
+        if (providedToken) {
+            var decoded = jwt.verify(providedToken, secret, {
+                algorithm: CONST.TOKEN_ALGORITHM
+            });
+            if (decoded && decoded.x === sessionID && requiredRoles.indexOf(Roles.getByID(decoded.y)) >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     return {
         Login: login,
         createToken: createToken,
-        testToken: testSecurityToken,
+        TestToken: testToken,
         refreshToken: refreshToken,
         testUserAccess: testUserAccess,
         getSessionID: getSessionID

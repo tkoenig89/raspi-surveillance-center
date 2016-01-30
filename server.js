@@ -62,7 +62,8 @@ Server.prototype.ImageWrapper = (function ImgWrapper() {
         var idx = idxAndCam[0];
         if (idx >= 0) {
             _cams.splice(idx, 1);
-
+            var fPath = idxAndCam[1].Filepath;
+            fs.unlinkSync(__dirname + fPath);
             //TODO: remove the image from hdd
             //idxAndCam[1].Filepath
         }
@@ -150,26 +151,6 @@ function handleHttp(req, res, path) {
             if (hasAccess) {
                 //access granted
                 provideFile(req, res, path);
-            } else {
-                //access denied due to invalid credentials
-                res.writeHead(401);
-                res.end("Denied");
-            }
-        } else if (path == "/refreshimage" && req.method == "POST") {
-            hasAccess = ServerSecurity.testUserAccess(req, "Admin,Read,View");
-            if (hasAccess) {
-                //access granted
-                var response = "Granted";
-                var img = server.ImageWrapper.getImg();
-                if (img) {
-                    Logger.debug(img.GetTimeStamp);
-                    response += ";" + img.Filepath + ";" + img.TimeStamp;
-                }
-
-                requestUpdatedImage();
-
-                res.writeHead(200);
-                res.end(response);
             } else {
                 //access denied due to invalid credentials
                 res.writeHead(401);

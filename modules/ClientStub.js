@@ -2,6 +2,7 @@ var BaseSocket = require("./BaseSocket"),
     CONSTANTS = require("../public/constants"),
     STATES = CONSTANTS.STATES,
     Logger = require("./Logger"),
+    ServerSecurity = require("./Security.js"),
     fs = require("fs");
 
 /*
@@ -81,10 +82,11 @@ function handleBinaryStart(client, data) {
     var fStream = client.binary.stream;
     if (!fStream) {
         var binary = client.binary;
-        binary.imgPath = "/../private/";
+        binary.imgPath = "/private/";
         binary.imgName = client.ID + "_" + data.fileName;
         var path = binary.imgPath + binary.imgName;
-        fStream = binary.stream = fs.createWriteStream(__dirname + path);
+        Logger.debug(__dirname);
+        fStream = binary.stream = fs.createWriteStream(__dirname + "/.." + path);
     }
     client.sendEventOnly(STATES.BINARY_START_ACK);
 }
@@ -111,21 +113,29 @@ function handleBinaryClose(client, data) {
 }
 
 function handleCamListRequest(client, data) {
-    Logger.debug(client.ID, "Requesting camera list");
+    if (ServerSecurity.TestToken(data.token, "Admin,Read,View")) {
+        Logger.debug(client.ID, "Requesting camera list");
 
-    var camList = client.server.ImageWrapper.GetAllCams();
-    Logger.debug("Cameralist:", camList);
+        var camList = client.server.ImageWrapper.GetAllCams();
+        Logger.debug("Cameralist:", camList);
 
-    client.send(camList, STATES.IMG_SEND_ALL_CAMS);
+        client.send(camList, STATES.IMG_SEND_ALL_CAMS);
+    } else {
+        Logger.log("unauthorized request");
+    }
 }
 
 function handleCamUpdateRequest(client, data) {
-    Logger.debug(client.ID, "Requesting camera update for", data.ID);
-    if (data.ID) {
-        var camera = client.server.findClientById(data.ID);
-        if (camera) {
-            camera.sendEventOnly(STATES.IMG_REQ);
+    if (ServerSecurity.TestToken(data.token, "Admin,Read,View")) {
+        Logger.debug(client.ID, "Requesting camera update for", data.ID);
+        if (data.ID) {
+            var camera = client.server.findClientById(data.ID);
+            if (camera) {
+                camera.sendEventOnly(STATES.IMG_REQ);
+            }
         }
+    } else {
+        Logger.log("unauthorized request");
     }
 }
 

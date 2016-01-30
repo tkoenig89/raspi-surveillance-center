@@ -42,10 +42,6 @@ var CONST = {
         APP_CLIENT: 2,
         2: "APP_CLIENT"
     },
-    ROLES: {
-        ADMIN: "yxa23289u09asdj290",
-        VIEWER: "8u3jhndas8921jn9w"
-    },
     MIME_TYPES: {
         js: "application/javascript",
         html: "text/html",

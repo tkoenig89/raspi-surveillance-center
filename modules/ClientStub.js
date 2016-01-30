@@ -17,7 +17,8 @@ function ClientStub(config) {
         this.server = config.server;
         this.binary = {
             stream: null,
-            imgPath: null
+            imgPath: null,
+            imgName: null,
         };
 
         //configure the internal eventhandlers
@@ -39,11 +40,15 @@ ClientStub.prototype.setupCommuncationHandling = function setup() {
     this.on(STATES.BINARY_START_REQ, handleBinaryStart);
     this.on(STATES.BINARY, handleBinaryData);
     this.on(STATES.BINARY_CLOSE, handleBinaryClose);
+    this.on(STATES.IMG_REQ_ALL_CAMS, handleCamListRequest);
 }
 
 function handleClose(client) {
     //todo: remove event listers!
     client.server.removeClient(client);
+
+    //remove the image from hdd
+    client.server.ImageWrapper.RemoveCam(client.ID);
     client = null;
 }
 
@@ -73,8 +78,11 @@ function handleSetup(client, data) {
 function handleBinaryStart(client, data) {
     var fStream = client.binary.stream;
     if (!fStream) {
-        var path = client.binary.imgPath = "/../private/" + data.fileName;
-        fStream = client.binary.stream = fs.createWriteStream(__dirname + path);
+        var binary = client.binary;
+        binary.imgPath = "/../private/";
+        binary.imgName = client.ID + "_" + data.fileName;
+        var path = binary.imgPath + binary.imgName;
+        fStream = binary.stream = fs.createWriteStream(__dirname + path);
     }
     client.sendEventOnly(STATES.BINARY_START_ACK);
 }
@@ -90,17 +98,27 @@ function handleBinaryData(client, data) {
 function handleBinaryClose(client, data) {
     var fStream = client.binary.stream;
     if (fStream) fStream.end();
-    client.binary.stream = null;
+    var binary = client.binary;
+    binary.stream = null;
 
     var imgWrapper = client.server.ImageWrapper;
-    imgWrapper.setImg(client.binary.imgPath);
+    imgWrapper.SetCam(client.ID, binary.imgPath + binary.imgName);
 
     //send update to all browsers:
     var browsers = client.server.getClientsByType(CONSTANTS.TYPES.BROWSER_CLIENT);
     if (browsers.length > 0) {
         for (var i in browsers)
-            browsers[i].send(imgWrapper.getImg(), CONSTANTS.STATES.NEW_IMAGE);
+            browsers[i].send(imgWrapper.GetCam(client.ID), CONSTANTS.STATES.NEW_IMAGE);
     }
+}
+
+function handleCamListRequest(client, data) {
+    Logger.debug(client.ID, "Requesting camera list");
+
+    var camList = client.server.ImageWrapper.GetAllCams();
+    Logger.debug("Cameralist:", camList);
+
+    client.send(camList, STATES.IMG_SEND_ALL_CAMS);
 }
 
 module.exports = ClientStub;

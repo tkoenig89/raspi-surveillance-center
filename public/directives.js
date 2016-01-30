@@ -25,7 +25,7 @@ directives.directive("rscLogin", ["rscLoginService", function (LoginService) {
     };
 }]);
 
-directives.directive("rscCamview", ["rscCamService", function (CamService) {
+directives.directive("rscCamview", ["rscCamService", "rscSync", function (CamService, rscSync) {
     return {
         restrict: "E",
         scope: {
@@ -33,6 +33,24 @@ directives.directive("rscCamview", ["rscCamService", function (CamService) {
         },
         templateUrl: "/public/templates/cameraSection.html",
         link: function (scope, elem, attrs) {
+            var ready = {
+                ws: false,
+                login: false
+            };
+            scope.CamList = [];
+
+            rscSync.on("ws_connected", function () {
+                ready.ws = true;
+                getCamList();
+            });
+
+            rscSync.on("login", function (loggedIn) {
+                if (loggedIn) {
+                    ready.login = true;
+                    getCamList()
+                }
+            });
+
             scope.updateImage = function updateImage() {
                 CamService.getImage().then(null, null, function (data) {
                     scope.camImgSrc = data.path;
@@ -43,7 +61,15 @@ directives.directive("rscCamview", ["rscCamService", function (CamService) {
                         setTimeout(scope.updateImage, 15000);
                     }
                 });
+            };
 
+            function getCamList() {
+                if (ready.ws && ready.login) {
+                    CamService.GetAllCameras().then(null, null, function (camList) {
+                        //this will be called whenever there is a new list of cams available
+                        scope.CamList = camList;
+                    });
+                }
             }
         }
     };

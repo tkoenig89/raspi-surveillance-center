@@ -128,7 +128,13 @@ services.factory("rscCamService", ["$http", "$q", "rscWebService", function ($ht
     });
 
     return {
-        getImage: getImage
+        getImage: getImage,
+        GetAllCameras: getAllCameras
+    }
+
+    function getAllCameras() {
+        wSocket.send(CONST.STATES.IMG_REQ_ALL_CAMS, {});
+        return wSocket.listen(CONST.STATES.IMG_SEND_ALL_CAMS);
     }
 
     /**    
@@ -258,11 +264,7 @@ services.factory("rscSync", ["rscQ", function (rscQ) {
     }
 }]);
 
-/*services.factory("rscLoginService", [function () {
-
-}]);*/
-
-services.factory("rscWebService", ["rscQ", function (rscQ) {
+services.factory("rscWebService", ["rscQ", "rscSync", function (rscQ, rscSync) {
     var eventQueues = [];
     var ws = null;
     //open connection to the server
@@ -278,8 +280,23 @@ services.factory("rscWebService", ["rscQ", function (rscQ) {
         //TODO    
     }
 
-    function _send() {
-        //TODO
+    /**
+     * Sends data using the open websocket
+     * @param   {string}   eventName name of the event to trigger on the server
+     * @param   {[[Type]]} payLoad   data to send to the server
+     * @returns {boolean}
+     */
+    function _send(eventName, payLoad) {
+        if (eventName && payLoad) {
+            var dataPacket = JSON.stringify({
+                ev: eventName,
+                pl: payLoad
+            });
+            ws.send(dataPacket);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     //allows listening to events received at the websocket    
@@ -299,16 +316,14 @@ services.factory("rscWebService", ["rscQ", function (rscQ) {
         var data = JSON.parse(event.data);
         switch (data.ev) {
         case CONST.STATES.SETUP_REQ:
-            ws.send(JSON.stringify({
-                pl: {
-                    type: CONST.TYPES.BROWSER_CLIENT,
-                    ID: getClientID()
-                },
-                ev: CONST.STATES.SETUP
-            }));
+            _send(CONST.STATES.SETUP, {
+                type: CONST.TYPES.BROWSER_CLIENT,
+                ID: getClientID()
+            });
             break;
         case CONST.STATES.SETUP_DONE:
             setClientID(data.pl.ID);
+            rscSync.emit("ws_connected");
             break;
         default:
             _notifyListeners(data);

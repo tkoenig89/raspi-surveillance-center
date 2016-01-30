@@ -29,33 +29,96 @@ server.on("connected", function (serv, ws) {
 
 
 Server.prototype.ImageWrapper = (function ImgWrapper() {
-    var _img = null;
+    var _cams = [];
 
     return {
-        setImg: _setImg,
-        getImg: _getImg,
-        hasImg: _hasImg
+        SetCam: setCam,
+        GetCam: getCam,
+        GetAllCams: getAllCams,
+        RemoveCam: removeCam
     };
 
-    function _setImg(imgPath) {
-        _img = new Img(imgPath);
+    function setCam(clientID, imgPath) {
+        var cam = getCamById(clientID);
+        if (!cam) {
+            cam = new Camera(clientID, imgPath);
+            _cams.push(cam);
+        } else {
+            cam.Filepath = imgPath;
+            cam.TimeStamp = getTimeStamp(new Date());
+        }
     }
 
-    function _hasImg() {
-        return _img ? true : false;
+    function getCam(id) {
+        return getCamById(id);
     }
 
-    function _getImg() {
-        return _img;
+    function getAllCams() {
+        return _cams;
     }
 
-    function Img(path) {
+    function removeCam(id) {
+        var idxAndCam = getCamAndIndexById(id);
+        var idx = idxAndCam[0];
+        if (idx >= 0) {
+            _cams.splice(idx, 1);
+
+            //TODO: remove the image from hdd
+            //idxAndCam[1].Filepath
+        }
+    }
+
+    function Camera(id, path) {
         this.Filepath = path;
-        var d = new Date();
-        this.TimeStamp = d.getHours() + ":" + d.getMinutes();
+        this.ID = id;
+        this.TimeStamp = getTimeStamp(new Date());
+    }
+
+    function getCamById(id) {
+        if (id) {
+            var len = _cams.length;
+            for (var i = 0; i < len; i++) {
+                var cam = _cams[i];
+                if (cam.ID == id) {
+                    return cam;
+                }
+            }
+        }
+        return null;
+    }
+
+    function getCamAndIndexById(id) {
+        if (id) {
+            var idx = -1;
+            var len = _cams.length;
+            for (var i = 0; i < len; i++) {
+                if (_cams[i].ID === id) {
+                    return [i, _cams[i]];
+                }
+            }
+        }
+        return [-1, null];
+    }
+    /**
+     * Creates a string representation of the provided date object
+     * @param   {object} dateObj javascript date object
+     * @returns {string} string representation
+     */
+    function getTimeStamp(dateObj) {
+        var dateStr = padStr(dateObj.getDate()) + "." + padStr(dateObj.getMonth() + 1) + "." + dateObj.getFullYear();
+        var timeStr = padStr(dateObj.getHours()) + ":" + padStr(dateObj.getMinutes());
+        return dateStr + " " + timeStr + " Uhr";
+    }
+
+    /**
+     * Creates a two digit string
+     * @param   {number} i number to pad
+     * @returns {string}
+     */
+    function padStr(i) {
+        return i < 10 ? "0" + i : i.toString();
     }
 })();
-
 
 //responds to different http requests
 function handleHttp(req, res, path) {
@@ -97,9 +160,9 @@ function handleHttp(req, res, path) {
             if (hasAccess) {
                 //access granted
                 var response = "Granted";
-
                 var img = server.ImageWrapper.getImg();
                 if (img) {
+                    Logger.debug(img.GetTimeStamp);
                     response += ";" + img.Filepath + ";" + img.TimeStamp;
                 }
 

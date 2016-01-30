@@ -5,7 +5,7 @@ var CONST = {
     TOKEN_HEADER: "security-token",
     TOKEN_TIMEOUT: 60, //minutes
     TOKEN_ALGORITHM: "HS512",
-    LOG_MODE: 2, //0: nothing, 1: error only, 2: log & error, 3: log & debug & error
+    LOG_MODE: 3, //0: nothing, 1: error only, 2: log & error, 3: log & debug & error
     TIME_BETWEEN_PINGS: 30, //seconds between pings 
     CLIENT_IMG_FOLDER: "/imgs",
     CLIENT_IMG_FILENAME: "now.jpg",
@@ -19,6 +19,8 @@ var CONST = {
         IMG_REQ: 20,
         IMG_REQ_FINAL: 21,
         IMG_REQ_REJECT: 22,
+        IMG_REQ_ALL_CAMS: 23,
+        IMG_SEND_ALL_CAMS: 24,
         BINARY: 40,
         BINARY_START_REQ: 41,
         BINARY_START_ACK: 42,

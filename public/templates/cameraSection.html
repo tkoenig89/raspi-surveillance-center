@@ -1,7 +1,15 @@
 <div>
-    <button ng-click="updateImage()">RefreshImage</button>
-    <input style="display=none;" type="checkbox" ng-model="repeatRequest" />Repeat image update
-    <br/>
-    <img width="500px" ng-src="{{camImgSrc}}" />
-    <span>{{camTime}}</span>
+    <ul class="cam-preview">
+        <li ng-repeat="cam in CamList" ng-class="{new:cam.HasNewImage,lost:!cam.IsConnected,active:cam.IsActive}" ng-click="ShowDetails(cam);">
+            <!--<img class="cam-preview-img" ng-src="{{cam.Filepath}}" />-->
+            {{::cam.Name}}
+        </li>
+    </ul>
+    <span ng-show="!CamList.length">Leider sind aktuell keine Kameras verbunden</span>
+    <section class="cam-detail" ng-show="SelectedCam">
+        <img width="500px" ng-src="{{SelectedCam.Filepath}}" />
+        <br/>
+        <span>{{SelectedCam.TimeStamp}}</span>
+        <button ng-disabled="!SelectedCam.IsConnected || SelectedCam.Requesting" ng-click="UpdateImage(SelectedCam)">{{!SelectedCam.IsConnected?'Verbindung unterbrochen':SelectedCam.Requesting?'Bitte warte kurz':'Aktuallisieren'}}</button>
+    </section>
 </div>

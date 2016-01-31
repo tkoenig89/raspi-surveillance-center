@@ -72,10 +72,19 @@ Server.prototype.addClient = function addClient(ws_client) {
     return clientConnection;
 };
 Server.prototype.idTracker = (function () {
+    //remember alls used ids to allow usage of the old id after reconnect
+    var usedIds = [];
     //client id is based on the server session
     var _id = 1;
-    return function () {
-        return (this.SessionID + (_id++));
+    return function (oldID) {
+        //allow usage of old ids
+        if (oldID && usedIds.indexOf(oldID) >= 0) {
+            return oldID;
+        } else {
+            var tempID = (this.SessionID + (_id++));
+            usedIds.push(tempID);
+            return tempID;
+        }
     };
 })();
 /*

@@ -107,55 +107,55 @@ services.factory("rscLoginService", ["$http", "$q", "rscSync", function ($http, 
         return list;
     }
 
+    function addTokenToWSRequest(data) {
+        if (!data) {
+            data = {};
+        }
+
+        data.token = _getToken();
+        return data;
+    }
+
     return {
         login: login,
+        AddTokenToWSRequest: addTokenToWSRequest,
         findOldSession: checkForValidToken
     }
 }]);
 
-services.factory("rscCamService", ["$http", "$q", "rscWebService", function ($http, $q, wSocket) {
-    var _defered = null;
+services.factory("rscCamService", ["$http", "$q", "rscWebService", "rscLoginService", function ($http, $q, wSocket, loginService) {
     var _imgCounter = 0;
 
-    //connect to the websocket server and listen for image updates
-    wSocket.listen(CONST.STATES.NEW_IMAGE).then(null, null, function (data) {
-        if (_defered) {
-            _defered.notify({
-                path: data.Filepath + "?c=" + (_imgCounter++),
-                time: data.TimeStamp
-            });
-        }
-    });
-
     return {
-        getImage: getImage
+        GetImage: getImage,
+        GetAllCameras: getAllCameras,
+        WaitForCamUpdate: waitForCamUpdate,
+        WaitForCamRemove: waitForCamRemove
+    }
+
+    function getAllCameras() {
+        wSocket.send(CONST.STATES.IMG_REQ_ALL_CAMS, loginService.AddTokenToWSRequest());
+        return wSocket.listen(CONST.STATES.IMG_SEND_ALL_CAMS);
     }
 
     /**    
      * Will request a new image from the server    
      */
-    function getImage() {
-        if (!_defered) {
-            _defered = $q.defer();
-        }
-
-        //ask for new image
-        $http.post("/refreshimage").success(function (data) {
-            if (data.indexOf("Granted") === 0) {
-                var spl = data.split(";");
-                var imgPath = spl[1];
-                _defered.notify({
-                    path: imgPath + "?c=" + (_imgCounter++),
-                    time: spl[2]
-                });
-            }
-        }).error(function (error) {
-            console.log(error);
+    function getImage(id) {
+        var data = loginService.AddTokenToWSRequest({
+            ID: id
         });
-
-        return _defered.promise;
+        wSocket.send(CONST.STATES.IMG_REQ_ONE_CAMS, data);
     }
 
+    function waitForCamUpdate() {
+        //connect to the websocket server and listen for image updates
+        return wSocket.listen(CONST.STATES.NEW_IMAGE);
+    }
+
+    function waitForCamRemove() {
+        return wSocket.listen(CONST.STATES.REMOVED_IMAGE);
+    }
 }]);
 
 /**
@@ -258,11 +258,7 @@ services.factory("rscSync", ["rscQ", function (rscQ) {
     }
 }]);
 
-/*services.factory("rscLoginService", [function () {
-
-}]);*/
-
-services.factory("rscWebService", ["rscQ", function (rscQ) {
+services.factory("rscWebService", ["rscQ", "rscSync", function (rscQ, rscSync) {
     var eventQueues = [];
     var ws = null;
     //open connection to the server
@@ -278,8 +274,23 @@ services.factory("rscWebService", ["rscQ", function (rscQ) {
         //TODO    
     }
 
-    function _send() {
-        //TODO
+    /**
+     * Sends data using the open websocket
+     * @param   {string}   eventName name of the event to trigger on the server
+     * @param   {[[Type]]} payLoad   data to send to the server
+     * @returns {boolean}
+     */
+    function _send(eventName, payLoad) {
+        if (eventName && payLoad) {
+            var dataPacket = JSON.stringify({
+                ev: eventName,
+                pl: payLoad
+            });
+            ws.send(dataPacket);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     //allows listening to events received at the websocket    
@@ -299,16 +310,14 @@ services.factory("rscWebService", ["rscQ", function (rscQ) {
         var data = JSON.parse(event.data);
         switch (data.ev) {
         case CONST.STATES.SETUP_REQ:
-            ws.send(JSON.stringify({
-                pl: {
-                    type: CONST.TYPES.BROWSER_CLIENT,
-                    ID: getClientID()
-                },
-                ev: CONST.STATES.SETUP
-            }));
+            _send(CONST.STATES.SETUP, {
+                type: CONST.TYPES.BROWSER_CLIENT,
+                ID: getClientID()
+            });
             break;
         case CONST.STATES.SETUP_DONE:
             setClientID(data.pl.ID);
+            rscSync.emit("ws_connected");
             break;
         default:
             _notifyListeners(data);

@@ -1,5 +1,6 @@
 var wSocket = require("ws"),
     CONST = require("../public/constants"),
+    CONFIG = require("../config.js"),
     STATES = CONST.STATES,
     Basesocket = require("./BaseSocket"),
     Logger = require("./Logger");
@@ -89,7 +90,7 @@ ClientConnection.prototype.reconnect = function reconnect() {
  */
 function handlePingPong(client) {
     Logger.debug("Setup ping-pong");
-    var pingTimeout = CONST.TIME_BETWEEN_PINGS * 1000;
+    var pingTimeout = CONFIG.CLIENT.TIME_BETWEEN_PINGS * 1000;
     client.sendPing = true;
     client._pingsent = 0;
 

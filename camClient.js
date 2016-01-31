@@ -1,5 +1,6 @@
 var Client = require("./modules/Client"),
     CONSTANTS = require("./public/constants"),
+    CONFIG = require("./config.js"),
     Logger = require("./modules/Logger"),
     STATES = CONSTANTS.STATES,
     TYPES = CONSTANTS.TYPES,
@@ -27,7 +28,8 @@ var cam_client = (function () {
     function handleSetupRequest(client) {
         client.send({
             type: TYPES.CAM_CLIENT,
-            ID: client.ID || -1
+            ID: client.ID || -1,
+            Name: CONFIG.CLIENT.NAME
         }, STATES.SETUP);
     }
 
@@ -63,8 +65,8 @@ var cam_client = (function () {
     function getLatestImage(client) {
         //remember path to the file and return its name
         client.binary = {
-            filePath: CONSTANTS.CLIENT_IMG_FOLDER + "/" + CONSTANTS.CLIENT_IMG_FILENAME,
-            fileFromDir: CONSTANTS.CLIENT_USE_PRJFOLDER
+            filePath: CONFIG.CLIENT.CLIENT_IMG_FOLDER + "/" + CONFIG.CLIENT.CLIENT_IMG_FILENAME,
+            fileFromDir: CONFIG.CLIENT.CLIENT_USE_PRJFOLDER
         };
         return client.binary.filePath.match(/\w+\.\w+$/)[0];
     }

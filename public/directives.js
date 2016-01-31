@@ -25,7 +25,8 @@ directives.directive("rscLogin", ["rscLoginService", function (LoginService) {
     };
 }]);
 
-directives.directive("rscCamview", ["rscCamService", function (CamService) {
+directives.directive("rscCamview", ["rscCamService", "rscSync", "$timeout", function (CamService, rscSync, $timeout) {
+    var timeBetweenRequests = 15000;
     return {
         restrict: "E",
         scope: {
@@ -33,17 +34,110 @@ directives.directive("rscCamview", ["rscCamService", function (CamService) {
         },
         templateUrl: "/public/templates/cameraSection.html",
         link: function (scope, elem, attrs) {
-            scope.updateImage = function updateImage() {
-                CamService.getImage().then(null, null, function (data) {
-                    scope.camImgSrc = data.path;
-                    scope.camTime = data.time;
+            var ready = {
+                ws: false,
+                login: false
+            };
+            scope.CamList = [];
+            scope.SelectedCam = null;
 
-                    //repeat image request if selected
-                    if (scope.repeatRequest) {
-                        setTimeout(scope.updateImage, 15000);
+            scope.UpdateImage = function updateImage(cam) {
+                if (!cam.Requesting) {
+                    CamService.GetImage(cam.ID);
+                    cam.Requesting = true;
+
+                    $timeout(function () {
+                        cam.Requesting = false;
+                    }, timeBetweenRequests)
+                }
+            };
+
+            scope.ShowDetails = function showDetails(cam) {
+                if (cam) {
+                    markAllAsInactive(scope.CamList);
+
+                    cam.HasNewImage = false;
+                    cam.IsActive = true;
+                    scope.SelectedCam = cam;
+                }
+            };
+
+            rscSync.on("ws_connected", function () {
+                ready.ws = true;
+                initImageEventListner();
+            });
+
+            rscSync.on("login", function (loggedIn) {
+                if (loggedIn) {
+                    ready.login = true;
+                    initImageEventListner()
+                }
+            });
+
+            /**
+             * Will setup a few listeners to capture updates send by the server
+             */
+            function initImageEventListner() {
+                if (ready.ws && ready.login) {
+                    CamService.GetAllCameras().then(null, null, function (camList) {
+                        //this will be called whenever there is a new list of cams available
+                        markAllAsNew(camList);
+                        scope.CamList = camList;
+                        scope.ShowDetails(camList[0]);
+                    });
+
+                    CamService.WaitForCamUpdate().then(null, null, function (cam) {
+                        if (cam) {
+                            if (cam.ID != scope.SelectedCam.ID) {
+                                cam.HasNewImage = true;
+                            }
+                            var browserCam = getCamByName(cam.Name);
+                            if (browserCam) {
+                                browserCam.IsConnected = cam.IsConnected;
+                                browserCam.ImgIdx = browserCam.ImgIdx || 0;
+                                browserCam.TimeStamp = cam.TimeStamp;
+                                browserCam.Filepath = cam.Filepath + "?c=" + (browserCam.ImgIdx++);
+                            } else {
+                                cam.ImgIdx = 0;
+                                scope.CamList.push(cam);
+                            }
+                        }
+                    });
+
+                    CamService.WaitForCamRemove().then(null, null, function (cam) {
+                        if (cam) {
+                            var browserCam = getCamByName(cam.Name);
+                            if (browserCam) {
+                                browserCam.IsConnected = false;
+                            }
+                        }
+                    });
+                }
+            }
+
+            function getCamByName(name) {
+                if (name) {
+                    var len = scope.CamList.length;
+                    for (var i = 0; i < len; i++) {
+                        var cam = scope.CamList[i];
+                        if (cam.Name == name) {
+                            return cam;
+                        }
                     }
-                });
+                }
+                return null;
+            }
 
+            function markAllAsNew(camList) {
+                for (var i in camList) {
+                    camList[i].HasNewImage = true;
+                }
+            }
+
+            function markAllAsInactive(camList) {
+                for (var i in camList) {
+                    camList[i].IsActive = false;
+                }
             }
         }
     };

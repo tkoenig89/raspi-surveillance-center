@@ -42,12 +42,14 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", "$timeout", func
             scope.SelectedCam = null;
 
             scope.UpdateImage = function updateImage(cam) {
-                CamService.GetImage(cam.ID);
-                cam.Requesting = true;
+                if (!cam.Requesting) {
+                    CamService.GetImage(cam.ID);
+                    cam.Requesting = true;
 
-                $timeout(function () {
-                    cam.Requesting = false;
-                }, timeBetweenRequests)
+                    $timeout(function () {
+                        cam.Requesting = false;
+                    }, timeBetweenRequests)
+                }
             };
 
             scope.ShowDetails = function showDetails(cam) {

@@ -1,7 +1,8 @@
 var CONFIG = {
     SERVER: {
-        archiveImages: false,
-        archiveFolder: "/home/pi/archive"
+        archiveImages: true,
+        archiveFolder: "/home/pi/archive",
+        maxFilesInArchive: 20
     },
     AUTHENTICATION: {
         TOKEN_HEADER: "security-token",

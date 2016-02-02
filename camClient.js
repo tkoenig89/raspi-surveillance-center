@@ -26,11 +26,15 @@ var cam_client = (function () {
     client.on(STATES.BINARY_START_ACK, sendImage);
 
     function handleSetupRequest(client) {
-        client.send({
-            type: TYPES.CAM_CLIENT,
-            ID: client.ID || -1,
-            Name: CONFIG.CLIENT.NAME
-        }, STATES.SETUP);
+        try {
+            client.send({
+                type: TYPES.CAM_CLIENT,
+                ID: client.ID || -1,
+                Name: CONFIG.CLIENT.NAME
+            }, STATES.SETUP);
+        } catch (ex) {
+            Logger.err("Error handling setup request", ex);
+        }
     }
 
     function handleSetupDone(client, data) {
@@ -53,13 +57,17 @@ var cam_client = (function () {
     }
 
     function handleImgRequest(client, data) {
-        Logger.log("Img request");
-        //get the latest image
-        var fileName = getLatestImage(client);
-        //and prepare server for sending if binary data
-        client.send({
-            fileName: fileName
-        }, STATES.BINARY_START_REQ);
+        try {
+            Logger.debug("Img request");
+            //get the latest image
+            var fileName = getLatestImage(client);
+            //and prepare server for sending if binary data
+            client.send({
+                fileName: fileName
+            }, STATES.BINARY_START_REQ);
+        } catch (ex) {
+            Logger.err("Error handling image request", ex);
+        }
     }
 
     function getLatestImage(client) {

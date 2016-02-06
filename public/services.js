@@ -158,6 +158,19 @@ services.factory("rscCamService", ["$http", "$q", "rscWebService", "rscLoginServ
     }
 }]);
 
+services.factory("rscArchiveService", ["rscWebService", "rscLoginService", function (wSocket, loginService) {
+    var _imgCounter = 0;
+
+    return {
+        GetArchivedData: getArchivedData
+    }
+
+    function getArchivedData() {
+        wSocket.send(CONST.STATES.REQUEST_ARCHIVED_IMAGES, loginService.AddTokenToWSRequest());
+        return wSocket.listen(CONST.STATES.PROVIDE_ARCHIVED_IMAGES);
+    }
+}]);
+
 /**
  * Service to Handle multiple requests to resources
  */

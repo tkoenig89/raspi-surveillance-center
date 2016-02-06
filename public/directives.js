@@ -162,6 +162,18 @@ directives.directive("rscAdmin", [function () {
     };
 }]);
 
+directives.directive("rscArchive", ["rscArchiveService", function (dService) {
+    return {
+        restrict: "E",
+        templateUrl: "/public/templates/archiveSection.html",
+        controller: [function () {
+            $scope.FolderList = [];
+            dService.GetArchivedData().then(null, null, function (data) {
+
+            });
+        }],
+    };
+}]);
 
 /*directives.directive("rscCameraSection",[function(){
     return{

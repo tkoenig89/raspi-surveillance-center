@@ -44,6 +44,7 @@ ClientStub.prototype.setupCommuncationHandling = function setup() {
     this.on(STATES.BINARY_CLOSE, handleBinaryClose);
     this.on(STATES.IMG_REQ_ALL_CAMS, handleCamListRequest);
     this.on(STATES.IMG_REQ_ONE_CAMS, handleCamUpdateRequest);
+    this.on(STATES.REQUEST_ARCHIVED_IMAGES, handleArchiveRequest);
 }
 
 function handleClose(client) {
@@ -128,6 +129,13 @@ function handleCamListRequest(client, data) {
 function handleCamUpdateRequest(client, data) {
     Logger.debug(client.ID, "Requesting camera update for", data.ID);
     client.server.ImageUpdateRequest(data.token, data.ID);
+}
+
+function handleArchiveRequest(client, data) {
+    var folderList = client.server.GetArchivedImages(data.token);
+    if (folderList) {
+        client.send(folderList, STATES.PROVIDE_ARCHIVED_IMAGES);
+    }
 }
 
 module.exports = ClientStub;

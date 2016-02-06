@@ -1,0 +1,13 @@
+<div class="archive">
+    <ul class="folder-list">
+        <li class="folder" ng-repeat="folder in FolderList" ng-click="OpenFolder(folder)">
+            {{::folder.Name}}
+        </li>
+    </ul>
+    <span ng-show="!FolderList.length">Leider sind aktuell keine Kameras verbunden</span>
+    <section class="folder-content" ng-show="SelectedFolder">
+        <span class="file" ng-repeat="file in SelectedFolder.FileList">
+        
+        </span>
+    </section>
+</div>

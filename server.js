@@ -110,7 +110,7 @@ Server.prototype.ImageWrapper = (function ImgWrapper() {
  */
 Server.prototype.GetAllCameras = function getAllCameras(securityToken) {
     try {
-        if (ServerSecurity.TestToken(securityToken, "Admin,Read,View")) {
+        if (ServerSecurity.TestToken(securityToken, CONFIG.PERMISSIONS.ACCESS_CAMERA)) {
             var camList = this.ImageWrapper.GetAllCams();
             Logger.debug("Cameralist:", camList);
 
@@ -124,9 +124,24 @@ Server.prototype.GetAllCameras = function getAllCameras(securityToken) {
     return null;
 };
 
+
+Server.prototype.GetArchivedImages = function getArchivedImages(securityToken, callback) {
+    try {
+        if (ServerSecurity.TestToken(securityToken, CONFIG.PERMISSIONS.ACCESS_ARCHIVE)) {
+            return getAllArchivedFolders(callback);
+        } else {
+            Logger.log("unauthorized request");
+        }
+    } catch (ex) {
+        Logger.err("server.GetArchivedImages", ex.message);
+    }
+    return null;
+}
+
+
 Server.prototype.ImageUpdateRequest = function imageUpdateRequest(token, camID) {
     try {
-        if (ServerSecurity.TestToken(token, "Admin,Read,View")) {
+        if (ServerSecurity.TestToken(token, CONFIG.PERMISSIONS.ACCESS_CAMERA)) {
             if (camID) {
                 var camera = this.findClientById(camID);
                 if (camera) {
@@ -211,10 +226,26 @@ function handleHttp(req, res, path) {
             //accessing the private area
             var path = decodeURI(path);
             Logger.log(path);
-            hasAccess = ServerSecurity.testUserAccess(req, "Admin,Read,View");
+            hasAccess = ServerSecurity.testUserAccess(req, CONFIG.PERMISSIONS.ACCESS_CAMERA);
             if (hasAccess) {
                 //access granted
                 provideFile(req, res, path);
+            } else {
+                //access denied due to invalid credentials
+                res.writeHead(401);
+                res.end("Denied");
+            }
+        } else if (path.indexOf("/archive/") == 0) {
+            //accessing the private area
+            var path = decodeURI(path);
+            var subPath = path.substr(path.indexOf("/archive/") + 8);
+            path = CONFIG.SERVER.archiveFolder + subPath;
+            Logger.debug(path);
+
+            hasAccess = ServerSecurity.testUserAccess(req, CONFIG.PERMISSIONS.ACCESS_ARCHIVE);
+            if (hasAccess) {
+                //access granted
+                provideFile(req, res, path, true);
             } else {
                 //access denied due to invalid credentials
                 res.writeHead(401);
@@ -228,8 +259,9 @@ function handleHttp(req, res, path) {
 }
 
 //returns a file from the public folder
-function provideFile(req, res, path) {
-    var file = fs.readFile(__dirname + path, function (err, data) {
+function provideFile(req, res, path, pathIsAbsolute) {
+    var filePath = !pathIsAbsolute ? __dirname + path : path;
+    var file = fs.readFile(filePath, function (err, data) {
         if (err) {
             res.writeHead(500);
             return res.end("Error: unable to load '" + path) + "'";
@@ -268,6 +300,94 @@ function archiveCameraImage(cam) {
     } catch (ex) {
         Logger.err("Archive Error", cam, ex.message);
     }
+}
+
+function getAllArchivedFolders(callback) {
+    var folderCount = 0;
+    var folderList = [];
+    if (CONFIG.SERVER.archiveImages) {
+        var folderList = [];
+        fs.readdir(CONFIG.SERVER.archiveFolder, function (err, files) {
+            if (err) {
+                Logger.err("Error accessing folder:", err);
+                return;
+            } else {
+                if (files && files.length > 0) {
+                    Logger.debug("Folders found:", files.length);
+                    var folderCount = files.length;
+                    for (var i = 0; i < folderCount; i++) {
+                        createFolder(files[i], function (err, folder) {
+                            if (err) {
+                                Logger.err("Error accessing folder:", files[i]);
+                            } else {
+                                folderList.push(folder);
+                            }
+                            checkIfFoldersReady();
+                        });
+                    }
+                } else {
+                    callback(null);
+                }
+            }
+        });
+    } else {
+        callback(null);
+    }
+
+    function checkIfFoldersReady() {
+        if (folderList.length >= folderCount) {
+            callback(folderList);
+        }
+    }
+}
+
+function createFolder(folderName, callback) {
+    var folder = {
+        Name: folderName
+    };
+
+    var folderPath = CONFIG.SERVER.archiveFolder + folderName;
+    getFilesFromFolder(folderPath, folderName, function (err, fileList) {
+        if (err) {
+            Logger.err("Error accessing file in folder:", folderPath, err);
+            callback(err);
+        } else {
+            folder.FileList = fileList;
+            callback(null, folder);
+        }
+    });
+}
+
+function getFilesFromFolder(folderPath, folderName, callback) {
+    fs.stat(folderPath, function (err, stats) {
+        if (err) {
+            callback(err);
+        } else {
+            if (stats.isDirectory()) {
+                fs.readdir(folderPath, function (err, files) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        var fileList = [];
+                        if (files && files.length > 0) {
+                            var len = files.length;
+                            for (var i = 0; i < len; i++) {
+                                var fileName = files[i];
+                                var fileObj = {
+                                    Name: fileName,
+                                    FilePath: "/archive/" + folderName + "/" + fileName
+                                };
+                                fileList.push(fileObj);
+                            }
+                        }
+                        callback(null, fileList);
+                    }
+                });
+            } else {
+                callback("no folder");
+            }
+        }
+    });
 }
 
 /**

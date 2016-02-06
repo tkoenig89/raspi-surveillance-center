@@ -62,8 +62,8 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", "$timeout", func
                 }
             };
 
-            rscSync.on("ws_connected", function () {
-                ready.ws = true;
+            rscSync.on("ws_connected", function (connected) {
+                ready.ws = connected;
                 initImageEventListner();
             });
 
@@ -143,25 +143,28 @@ directives.directive("rscCamview", ["rscCamService", "rscSync", "$timeout", func
     };
 }]);
 
-directives.directive("rscAdmin", [function () {
+directives.directive("rscArchive", ["rscArchiveService", function (dService) {
     return {
         restrict: "E",
-        templateUrl: "/public/templates/adminSection.html",
-        link: function (scope, elem, attrs) {
-
-        },
-        controller: ["$scope", "rscSync", function ($scope, rscSync) {
-            rscSync.on("login", function (data) {
-                if (data) {
-                    //user has successful logged in
-                } else {
-                    //user is not authorized
+        templateUrl: "/public/templates/archiveSection.html",
+        controller: ["$scope", function ($scope) {
+            $scope.FolderList = [];
+            $scope.SelectedFolder = null;
+            dService.GetArchivedData().then(null, null, function (data) {
+                if (data && data.length > 0) {
+                    $scope.FolderList = data;
+                    $scope.OpenFolder($scope.FolderList[0]);
                 }
             });
+
+            $scope.OpenFolder = function openFolder(folder) {
+                if (folder) {
+                    $scope.SelectedFolder = folder;
+                }
+            }
         }],
     };
 }]);
-
 
 /*directives.directive("rscCameraSection",[function(){
     return{

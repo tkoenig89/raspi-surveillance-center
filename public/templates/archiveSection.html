@@ -1,0 +1,14 @@
+<div class="archive">
+    <div class="folder-list">
+        <div class="folder" ng-repeat="folder in FolderList | orderBy:'Name'" ng-click="OpenFolder(folder)">
+            <i class="fa fa-folder-o" ng-class="{'fa-folder-open-o':folder == SelectedFolder}"></i>
+            <span class="folder-name">{{::folder.Name}}</span>
+        </div>
+    </div>
+    <span ng-show="!FolderList.length">Archiv konnte nicht gefunden werden</span>
+    <section class="folder-content" ng-show="SelectedFolder">
+        <div class="file" ng-repeat="file in SelectedFolder.FileList">
+            <a target="_blank" ng-href="{{file.FilePath}}">{{file.Name}}</a>
+        </div>
+    </section>
+</div>

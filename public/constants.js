@@ -21,6 +21,8 @@ var CONST = {
         BINARY_CLOSE: 43,
         NEW_IMAGE: 50,
         REMOVED_IMAGE: 51,
+        REQUEST_ARCHIVED_IMAGES: 60,
+        PROVIDE_ARCHIVED_IMAGES: 60,
         DEFAULT: 100,
         CONNECTION_CLOSED: "close",
         CONNECTION_OPENED: "connected",

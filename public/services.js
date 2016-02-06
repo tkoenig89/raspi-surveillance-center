@@ -158,6 +158,19 @@ services.factory("rscCamService", ["$http", "$q", "rscWebService", "rscLoginServ
     }
 }]);
 
+services.factory("rscArchiveService", ["rscWebService", "rscLoginService", function (wSocket, loginService) {
+    var _imgCounter = 0;
+
+    return {
+        GetArchivedData: getArchivedData
+    }
+
+    function getArchivedData() {
+        wSocket.send(CONST.STATES.REQUEST_ARCHIVED_IMAGES, loginService.AddTokenToWSRequest());
+        return wSocket.listen(CONST.STATES.PROVIDE_ARCHIVED_IMAGES);
+    }
+}]);
+
 /**
  * Service to Handle multiple requests to resources
  */
@@ -234,6 +247,7 @@ Queue.prototype = {
 
 services.factory("rscSync", ["rscQ", function (rscQ) {
     var queues = [];
+    var resolved = {};
 
     return {
         emit: _emit,
@@ -243,10 +257,16 @@ services.factory("rscSync", ["rscQ", function (rscQ) {
     function _on(eventName, callback) {
         var q = _getQueue(eventName);
         q.add().then(null, null, callback);
+
+        //callback if event has been already emited in the past
+        if (resolved[eventName]) {
+            callback(resolved[eventName]);
+        }
     }
 
     function _emit(eventName, data) {
         var q = _getQueue(eventName);
+        resolved[eventName] = data;
         q.notify(data);
     }
 
@@ -317,7 +337,7 @@ services.factory("rscWebService", ["rscQ", "rscSync", function (rscQ, rscSync) {
             break;
         case CONST.STATES.SETUP_DONE:
             setClientID(data.pl.ID);
-            rscSync.emit("ws_connected");
+            rscSync.emit("ws_connected", true);
             break;
         default:
             _notifyListeners(data);

@@ -16,6 +16,10 @@ var CONFIG = {
         CLIENT_IMG_FILENAME: "now.jpg",
         CLIENT_USE_PRJFOLDER: true
     },
+    PERMISSIONS: {
+        ACCESS_CAMERA: "Admin,View",
+        ACCESS_ARCHIVE: "Admin"
+    },
     LOGGER: {
         LOG_MODE: 2 //0: nothing, 1: error only, 2: log & error, 3: log & debug & error
     }

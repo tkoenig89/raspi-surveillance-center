@@ -132,10 +132,11 @@ function handleCamUpdateRequest(client, data) {
 }
 
 function handleArchiveRequest(client, data) {
-    var folderList = client.server.GetArchivedImages(data.token);
-    if (folderList) {
-        client.send(folderList, STATES.PROVIDE_ARCHIVED_IMAGES);
-    }
+    client.server.GetArchivedImages(data.token, function (folderList) {
+        if (folderList) {
+            client.send(folderList, STATES.PROVIDE_ARCHIVED_IMAGES);
+        }
+    });
 }
 
 module.exports = ClientStub;

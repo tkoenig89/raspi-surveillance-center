@@ -19,10 +19,13 @@ nav {
   width: 200px;
   padding: 5px;
 }
-.nav-list {
+nav .nav-list {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+nav .nav-list li {
+  cursor: pointer;
 }
 .content {
   margin-left: 210px;
@@ -57,4 +60,23 @@ nav {
 }
 .cam-detail {
   border: 1px solid #000;
+}
+.archive .folder {
+  width: 80px;
+  height: 80px;
+  display: inline-block;
+  position: relative;
+  margin-right: 10px;
+  cursor: pointer;
+}
+.archive .folder .fa {
+  font-size: 80px;
+  position: absolute;
+}
+.archive .folder .folder-name {
+  position: absolute;
+  margin: 19px 7px 10px;
+  font-size: 14px;
+  max-height: 42px;
+  overflow: hidden;
 }

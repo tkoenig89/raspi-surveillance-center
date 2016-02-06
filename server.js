@@ -125,10 +125,10 @@ Server.prototype.GetAllCameras = function getAllCameras(securityToken) {
 };
 
 
-Server.prototype.GetArchivedImages = function getArchivedImages(securityToken) {
+Server.prototype.GetArchivedImages = function getArchivedImages(securityToken, callback) {
     try {
         if (ServerSecurity.TestToken(securityToken, CONFIG.PERMISSIONS.ACCESS_ARCHIVE)) {
-            return getAllArchivedFolders();
+            return getAllArchivedFolders(callback);
         } else {
             Logger.log("unauthorized request");
         }
@@ -309,37 +309,29 @@ function getAllArchivedFolders(callback) {
         var folderList = [];
         fs.readdir(CONFIG.SERVER.archiveFolder, function (err, files) {
             if (err) {
-                Logger.err("Error accessing archive folder:", err);
+                Logger.err("Error accessing folder:", err);
                 return;
             } else {
                 if (files && files.length > 0) {
                     Logger.debug("Folders found:", files.length);
                     var folderCount = files.length;
                     for (var i = 0; i < folderCount; i++) {
-                        var folderName = files[i];
-                        var folder = {
-                            Name: folderName
-                        };
-                        var folderPath = CONFIG.SERVER.archiveImages + fileName;
-                        getFilesFromFolder(folderPath, folderName, function (err, fileList) {
+                        createFolder(files[i], function (err, folder) {
                             if (err) {
-                                Logger.err("Error accessing archive folder:", folderPath, err);
-                                callback(err);
+                                Logger.err("Error accessing folder:", files[i]);
                             } else {
-                                folder.FileList = fileList;
                                 folderList.push(folder);
-                                checkIfFoldersReady();
                             }
+                            checkIfFoldersReady();
                         });
                     }
                 } else {
-                    Logger.log("No folders to cleanup");
+                    callback(null);
                 }
             }
-
         });
     } else {
-        return null;
+        callback(null);
     }
 
     function checkIfFoldersReady() {
@@ -347,60 +339,79 @@ function getAllArchivedFolders(callback) {
             callback(folderList);
         }
     }
+}
 
-    function getFilesFromFolder(folderPath, folderName, callback) {
-        fs.stat(filePath, function (err, stats) {
-            if (err) {
-                callback(err);
-            } else {
-                if (stats.isDirectory()) {
-                    fs.readdir(folderPath, function (err, files) {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            var fileList = [];
-                            if (files && files.length > 0) {
-                                var len = files.length;
-                                for (var i = 0; i < len; i++) {
-                                    var fileName = files[i];
-                                    var fileObj = {
-                                        Name: fileName,
-                                        filePath: "/archive/" + folderName + "/" + fileName
-                                    };
-                                    fileList.push(fileObj);
-                                }
+function createFolder(folderName, callback) {
+    var folder = {
+        Name: folderName
+    };
+
+    var folderPath = CONFIG.SERVER.archiveFolder + folderName;
+    getFilesFromFolder(folderPath, folderName, function (err, fileList) {
+        if (err) {
+            Logger.err("Error accessing file in folder:", folderPath, err);
+            callback(err);
+        } else {
+            folder.FileList = fileList;
+            callback(null, folder);
+        }
+    });
+}
+
+function getFilesFromFolder(folderPath, folderName, callback) {
+    fs.stat(folderPath, function (err, stats) {
+        if (err) {
+            callback(err);
+        } else {
+            if (stats.isDirectory()) {
+                fs.readdir(folderPath, function (err, files) {
+                    if (err) {
+                        callback(err);
+                    } else {
+                        var fileList = [];
+                        if (files && files.length > 0) {
+                            var len = files.length;
+                            for (var i = 0; i < len; i++) {
+                                var fileName = files[i];
+                                var fileObj = {
+                                    Name: fileName,
+                                    FilePath: "/archive/" + folderName + "/" + fileName
+                                };
+                                fileList.push(fileObj);
                             }
-                            callback(null, fileList);
                         }
-                    });
-                }
+                        callback(null, fileList);
+                    }
+                });
+            } else {
                 callback("no folder");
             }
-        });
-    }
+        }
+    });
+}
 
-    /**
-     * Creates a string representation of the provided date object
-     * @param   {object} dateObj javascript date object
-     * @returns {string} string representation
-     */
-    function getTimeStamp(dateObj) {
-        var dateStr = padStr(dateObj.getDate()) + "." + padStr(dateObj.getMonth() + 1) + "." + dateObj.getFullYear();
-        var timeStr = padStr(dateObj.getHours()) + ":" + padStr(dateObj.getMinutes());
-        return dateStr + " " + timeStr + " Uhr";
-    }
+/**
+ * Creates a string representation of the provided date object
+ * @param   {object} dateObj javascript date object
+ * @returns {string} string representation
+ */
+function getTimeStamp(dateObj) {
+    var dateStr = padStr(dateObj.getDate()) + "." + padStr(dateObj.getMonth() + 1) + "." + dateObj.getFullYear();
+    var timeStr = padStr(dateObj.getHours()) + ":" + padStr(dateObj.getMinutes());
+    return dateStr + " " + timeStr + " Uhr";
+}
 
-    function getFileNameTimeStamp(dateObj) {
-        var dateStr = dateObj.getFullYear() + padStr(dateObj.getMonth() + 1) + padStr(dateObj.getDate());
-        var timeStr = padStr(dateObj.getHours()) + padStr(dateObj.getMinutes());
-        return dateStr + "T" + timeStr;
-    }
+function getFileNameTimeStamp(dateObj) {
+    var dateStr = dateObj.getFullYear() + padStr(dateObj.getMonth() + 1) + padStr(dateObj.getDate());
+    var timeStr = padStr(dateObj.getHours()) + padStr(dateObj.getMinutes());
+    return dateStr + "T" + timeStr;
+}
 
-    /**
-     * Creates a two digit string
-     * @param   {number} i number to pad
-     * @returns {string}
-     */
-    function padStr(i) {
-        return i < 10 ? "0" + i : i.toString();
-    }
+/**
+ * Creates a two digit string
+ * @param   {number} i number to pad
+ * @returns {string}
+ */
+function padStr(i) {
+    return i < 10 ? "0" + i : i.toString();
+}

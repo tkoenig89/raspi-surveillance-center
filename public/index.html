@@ -17,19 +17,16 @@
     </header>
     <section ng-if="IsLoggedIn">
         <nav class="paper" ng-init="activeTab=1">
-            <b>Navigation</b>
             <ul class="nav-list">
-                <li ng-click="activeTab=1">Live</li>
-                <li ng-click="activeTab=2">Archiv</li>
+                <li ng-click="activeTab=1" ng-class="{active:activeTab==1}">Live</li>
+                <li ng-click="activeTab=2" ng-class="{active:activeTab==2}">Server Archiv</li>
             </ul>
         </nav>
 
         <section class="content" ng-show="activeTab==1">
-            Live
             <rsc-camview></rsc-camview>
         </section>
         <section class="content" ng-if="activeTab==2">
-            Archiv
             <rsc-archive></rsc-archive>
         </section>
     </section>

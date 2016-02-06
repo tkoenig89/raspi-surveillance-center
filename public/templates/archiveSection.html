@@ -1,6 +1,6 @@
 <div class="archive">
     <div class="folder-list">
-        <div class="folder" ng-repeat="folder in FolderList" ng-click="OpenFolder(folder)">
+        <div class="folder" ng-repeat="folder in FolderList | orderBy:'Name'" ng-click="OpenFolder(folder)">
             <i class="fa fa-folder-o" ng-class="{'fa-folder-open-o':folder == SelectedFolder}"></i>
             <span class="folder-name">{{::folder.Name}}</span>
         </div>

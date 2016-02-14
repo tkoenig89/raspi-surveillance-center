@@ -79,19 +79,39 @@ var cam_client = (function () {
         return client.binary.filePath.match(/\w+\.\w+$/)[0];
     }
 
+    /**
+     * Will send the latest image to the provided client
+     * @param {object} client target for the data
+     */
     function sendImage(client) {
+        Logger.debug("Start reading file", client.binary.fileFromDir, client.binary.filePath);
+        //open stream
         var readStream = fs.createReadStream((client.binary.fileFromDir ? __dirname : "") + client.binary.filePath);
-        Logger.debug("start", client.binary.fileFromDir, client.binary.filePath);
 
+        //wait for data from the readstream
         readStream.on('data', function (data) {
             Logger.debug("data", data);
-            client.ws.send(data, {
-                binary: true,
-                mask: true
-            });
+            if (client.ws) {
+                client.ws.send(data, {
+                    binary: true,
+                    mask: true
+                });
+            } else {
+                //close stream if there is no ws accessible
+                Logger.err("Unable to use WebSocket. Closing FileStream.");
+                readStream.destroy();
+            }
         });
+
+        //listen to file-end event
         readStream.on("end", function (data) {
-            Logger.debug("end", data);
+            Logger.debug("End of file has been reached.", data);
+            client.sendEventOnly(STATES.BINARY_CLOSE);
+        });
+
+        //listen to closing event
+        readStream.on("close", function (data) {
+            Logger.debug("Filestream has been closed.", data);
             client.sendEventOnly(STATES.BINARY_CLOSE);
         });
     }

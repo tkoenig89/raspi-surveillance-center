@@ -68,6 +68,11 @@ ClientConnection.prototype.connect = function connect(isReconnect) {
     }
 };
 ClientConnection.prototype.reconnect = function reconnect() {
+    try {
+        this.ws.close();
+    } catch (ex) {
+        Logger.debug("error closing connection before reconnect");
+    }
     this.ws = null;
     this.sendPing = false;
 

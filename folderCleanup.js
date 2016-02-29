@@ -58,10 +58,9 @@ function cleanFolder(folderPath) {
             } else {
                 if (files && files.length > maxFiles) {
                     Logger.log("Cleaning up", files.length, "files in", folderPath);
-                    var len = files.length;
-                    for (var i = maxFiles; i < len; i++) {
+                    for (var i = (files.length - maxFiles); i >= 0; i--) {
                         var fileName = files[i];
-                        fs.unlinkSync(folderPath + "\\" + fileName);
+                        fs.unlinkSync(folderPath + "/" + fileName);
                     }
                 } else {
                     Logger.log("No cleanup required in", folderPath);
